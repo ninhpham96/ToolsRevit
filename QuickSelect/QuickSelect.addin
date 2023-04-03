@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+	<AddIn Type="Application">
+		<Name>Revit Tool </Name>
+		<Assembly>QuickSelect.dll</Assembly>
+		<FullClassName>QuickSelect.AppCommand</FullClassName>
+		<Description>Add-In Revit Develop by PVN</Description>
+		<ClientId>88C3E65F-BE4D-410A-8040-5F6DDAE31E28</ClientId>
+		<VendorId>Pham Van Ninh</VendorId>
+		<VendorDescription>tienduy.nguyen</VendorDescription>
+	</AddIn>
+</RevitAddIns>
