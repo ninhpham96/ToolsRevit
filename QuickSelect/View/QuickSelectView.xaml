@@ -7,7 +7,7 @@
         xmlns:local="clr-namespace:QuickSelect.View"
         x:Name="Win"
         mc:Ignorable="d"
-        Title="QuickSelectView" Height="450" Width="800">
+        Title="Quick Select" Height="800" Width="400">
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Loaded">
             <i:InvokeCommandAction Command="{Binding WindowClosedCommand}"
@@ -19,9 +19,28 @@
                                    x:Name="interactivityFix"/>
         </i:EventTrigger>
     </i:Interaction.Triggers>
-    <Grid>
-        <Button Width="100" Height="100" Command="{Binding ClickmeCommand}">
-            Click me
-        </Button>
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="25"></RowDefinition>
+            <RowDefinition></RowDefinition>
+        </Grid.RowDefinitions>
+        <Label Grid.Row="0" Content="Family List"/>
+        <Border Grid.Row="1" BorderBrush="#FFD1D0D0" BorderThickness="1">
+            <TreeView x:Name="Folderview">
+                <TreeView.ItemContainerStyle>
+                    <Style TargetType="{x:Type TreeViewItem}">
+                        <Setter Property="HeaderTemplate">
+                            <Setter.Value>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        
+                                    </StackPanel>
+                                </DataTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </TreeView.ItemContainerStyle>
+            </TreeView>
+        </Border>
     </Grid>
 </Window>
