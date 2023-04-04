@@ -30,8 +30,8 @@ namespace QuickSelect
             //Buil all ribbon item
             BuildUI(a);
 
-            //Handler = new ColorHandler();
-            //ExEvent = ExternalEvent.Create(Handler);
+            Handler = new QuickSelectHandler();
+            ExEvent = ExternalEvent.Create(Handler);
             return Result.Succeeded;
         }
         public Result OnShutdown(UIControlledApplication a)

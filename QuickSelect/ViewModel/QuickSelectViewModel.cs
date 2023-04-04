@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
+using QuickSelect.Utilities;
 
 namespace QuickSelect.ViewModel
 {
@@ -27,8 +28,7 @@ namespace QuickSelect.ViewModel
             Instance = this;
             UiApp = uiapp;
             _doc = uiapp.ActiveUIDocument.Document;
-            _handler = handler;
-            
+            _handler = handler;       
         }
 
         #region Command
@@ -42,6 +42,15 @@ namespace QuickSelect.ViewModel
         private void WindowClosed()
         {
             IsOpen = false;
+        }
+        [RelayCommand]
+        private void Clickme()
+        {
+            TaskDialog.Show("n", "1");
+            _handler.QuickSelectVM = this;
+            AppCommand.Handler.Request.Make(QuickSelectHandler.RequestId.OK);
+            AppCommand.ExEvent.Raise();
+            RevitUtils.SetFocusToRevit();
         }
         #endregion
     }

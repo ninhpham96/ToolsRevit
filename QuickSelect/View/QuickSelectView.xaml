@@ -15,10 +15,13 @@
         </i:EventTrigger>
         <i:EventTrigger EventName="Closed">
             <i:InvokeCommandAction Command="{Binding WindowClosedCommand}"
-                                   CommandParameter="{Binding ElementName=Win}" />
+                                   CommandParameter="{Binding ElementName=Win}"
+                                   x:Name="interactivityFix"/>
         </i:EventTrigger>
     </i:Interaction.Triggers>
     <Grid>
-
+        <Button Width="100" Height="100" Command="{Binding ClickmeCommand}">
+            Click me
+        </Button>
     </Grid>
 </Window>
