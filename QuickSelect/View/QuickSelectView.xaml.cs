@@ -1,6 +1,7 @@
 ﻿using QuickSelect.ViewModel;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,6 +22,7 @@ namespace QuickSelect.View
     /// </summary>
     public partial class QuickSelectView : Window
     {
+        QuickSelectViewModel viewModel;
         public static QuickSelectView? Instance { get; private set; } = null;
         public QuickSelectView(QuickSelectViewModel vm)
         {
@@ -31,6 +33,7 @@ namespace QuickSelect.View
                 InitializeComponent();
                 Instance = this;
                 var uiapp = vm.UiApp;
+                viewModel = vm;
                 IntPtr revitWindow;
 
                 if (uiapp != null)
@@ -41,12 +44,21 @@ namespace QuickSelect.View
                     var windowRevitOpen = hwndSource.RootVisual as Window;
                     this.Owner = windowRevitOpen; //Set onwer for WPF window
                     this.DataContext = vm;
+
+                    DriveInfo[] drives = DriveInfo.GetDrives();
+                    foreach (DriveInfo driveInfo in drives)
+                        trvStructure.Items.Add(vm.CreateTreeItem(driveInfo));
                     this.Show();
                 }               
 
             }
             if (Instance?.WindowState == WindowState.Minimized)
                 Instance.WindowState = WindowState.Normal;
+        }
+
+        private void TreeViewItem_Expanded(object sender, RoutedEventArgs e)
+        {
+            viewModel.TreeViewItemExpandedCommand.Execute(e);
         }
     }
 }
