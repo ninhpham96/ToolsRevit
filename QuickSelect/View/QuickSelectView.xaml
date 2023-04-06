@@ -22,8 +22,73 @@
     </i:Interaction.Triggers>
     <Grid Margin="5">
         <GroupBox Header="Family List" BorderThickness="1" />
-        <TreeView Name="trvStructure" 
-                  TreeViewItem.Expanded="TreeViewItem_Expanded" 
-                  Margin="5 20 5 5" />
+        
+        <!--<TreeView x:Name="trvStructure">
+            <TreeView.ItemContainerStyle>
+                <Style TargetType="{x:Type TreeViewItem}">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="{x:Type TreeViewItem}">
+                                <StackPanel Orientation="Horizontal">
+                                    <CheckBox IsChecked="{Binding IsSelected, RelativeSource={RelativeSource TemplatedParent}}"
+                                      Margin="2"/>
+                                    <ContentPresenter Content="{TemplateBinding Header}" Margin="2"/>
+                                </StackPanel>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </TreeView.ItemContainerStyle>
+            <TreeViewItem Header="Item 1">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="Expanded">
+                        <i:InvokeCommandAction Command="{Binding TreeViewItemExpandedCommand}"
+                                               CommandParameter="{Binding ElementName=trvStructure}"/>
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+                <TreeViewItem Header="Subitem 1" />
+                <TreeViewItem Header="Subitem 2" />
+            </TreeViewItem>
+        </TreeView>-->
+        <!--<TreeView x:Name="trvStructure" ItemsSource="{Binding vm.Items}">
+            <TreeView.ItemContainerStyle>
+                <Style TargetType="{x:Type TreeViewItem}">
+                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                </Style>
+            </TreeView.ItemContainerStyle>
+            <TreeView.ItemTemplate>
+                <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal">                        
+                        <TextBlock VerticalAlignment="Center" Text="{Binding vm.Name}" />
+                        <CheckBox Content="111"/>
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>-->
+        <!--<TreeView ItemsSource="{Binding Nodes}">
+            <TreeView.ItemTemplate>
+                <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                    <TextBlock Text="{Binding Name}" />
+                </HierarchicalDataTemplate>
+            </TreeView.ItemTemplate>
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="Expanded">
+                    <i:InvokeCommandAction Command="{Binding PopulateChildNodesCommand}" />
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+        </TreeView>-->
+        <TreeView ItemsSource="{Binding Items}">
+            <TreeView.ItemContainerStyle>
+                <Style TargetType="{x:Type TreeViewItem}">
+                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
+                    <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"/>
+                </Style>
+            </TreeView.ItemContainerStyle>
+            <TreeView.ItemTemplate>
+                <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                    <TextBlock Text="{Binding Name}"/>
+                </HierarchicalDataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>
     </Grid>
 </Window>

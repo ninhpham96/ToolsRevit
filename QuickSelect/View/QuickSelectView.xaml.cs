@@ -44,21 +44,12 @@ namespace QuickSelect.View
                     var windowRevitOpen = hwndSource.RootVisual as Window;
                     this.Owner = windowRevitOpen; //Set onwer for WPF window
                     this.DataContext = vm;
-
-                    DriveInfo[] drives = DriveInfo.GetDrives();
-                    foreach (DriveInfo driveInfo in drives)
-                        trvStructure.Items.Add(vm.CreateTreeItem(driveInfo));
                     this.Show();
                 }               
 
             }
             if (Instance?.WindowState == WindowState.Minimized)
                 Instance.WindowState = WindowState.Normal;
-        }
-
-        private void TreeViewItem_Expanded(object sender, RoutedEventArgs e)
-        {
-            viewModel.TreeViewItemExpandedCommand.Execute(e);
         }
     }
 }
