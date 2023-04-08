@@ -14,8 +14,6 @@ namespace QuickSelect
         {
             return Execute(commandData.Application);
         }
-
-        //Call this methos with the external command
         public Result Execute(UIApplication uiapp)
         {
             try

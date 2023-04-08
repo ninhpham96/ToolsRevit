@@ -14,6 +14,8 @@ using System.Windows;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using System.ComponentModel;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using System.Diagnostics;
 
 namespace QuickSelect.ViewModel
 {
@@ -21,32 +23,43 @@ namespace QuickSelect.ViewModel
     {
         [ObservableProperty]
         private UIApplication? uiApp = null;
-        private Document? _doc = null;
-        private QuickSelectHandler _handler;
+        private Document? doc = null;
+        private QuickSelectHandler handler;
         [ObservableProperty]
         private bool isOpen = false;
 
         public static QuickSelectViewModel? Instance { get; set; }
-
-        public ObservableCollection<TreeViewItemViewModel> Items { get; set; }
-
+        public ObservableCollection<QuickSelectData>? Items { get; set; }
         public QuickSelectViewModel(UIApplication uiapp, QuickSelectHandler handler)
         {
             Instance = this;
             UiApp = uiapp;
-            _doc = uiapp.ActiveUIDocument.Document;
-            _handler = handler;
-            Items = new ObservableCollection<TreeViewItemViewModel>();
-            Items.Add(new TreeViewItemViewModel() { Name="ninh"});
-            Items.Add(new TreeViewItemViewModel() { Name="ninh"});
-            Items.Add(new TreeViewItemViewModel() { Name="ninh"});
+            doc = uiapp.ActiveUIDocument.Document;
+            this.handler = handler;
+            IEnumerable<IGrouping<string?,Element>> children = Data.Instance.GetAllElementsInView(doc)
+                .Where(e=>e.Category!=null).GroupBy(e=>e.Category!=null?e.Category.Name:null);
+            Items = new ObservableCollection<QuickSelectData>(children.Select(ele => new QuickSelectData(ele)));
         }
 
         #region Command
         [RelayCommand]
+        private void ClickOk()
+        {
+            MessageBox.Show("Test Ok?");
+        }
+        [RelayCommand]
+        private void ClickZoomIn()
+        {
+            MessageBox.Show("Test ZoomIn?");
+        }
+        [RelayCommand]
+        private void ClickCancel()
+        {
+            MessageBox.Show("Test Cancel?");
+        }
+        [RelayCommand]
         private void WindowLoaded()
         {
-            TaskDialog.Show("n", "1");
             IsOpen = true;
         }
         [RelayCommand]
@@ -54,93 +67,8 @@ namespace QuickSelect.ViewModel
         {
             IsOpen = false;
         }
-        //[RelayCommand]
-        //private void Clickme()
-        //{
-        //    TaskDialog.Show("n", "1");
-        //    _handler.QuickSelectVM = this;
-        //    AppCommand.Handler.Request.Make(QuickSelectHandler.RequestId.OK);
-        //    AppCommand.ExEvent.Raise();
-        //    RevitUtils.SetFocusToRevit();
-        //}
-        //[RelayCommand]
-        //private void TreeViewItemExpanded(RoutedEventArgs e)
-        //{
-        //    TreeViewItem? item = e.Source as TreeViewItem;
-        //    if (item == null)
-        //        return;
-        //    if ((item.Items.Count == 1) && (item.Items[0] is string))
-        //    {
-        //        item.Items.Clear();
-
-        //        DirectoryInfo expandedDir = null;
-        //        if (item.Tag is DriveInfo)
-        //            expandedDir = (item.Tag as DriveInfo).RootDirectory;
-        //        if (item.Tag is DirectoryInfo)
-        //            expandedDir = (item.Tag as DirectoryInfo);
-        //        try
-        //        {
-        //            foreach (DirectoryInfo subDir in expandedDir.GetDirectories())
-        //                item.Items.Add(CreateTreeItem(subDir));
-        //        }
-        //        catch { }
-        //    }
-
-        //}
         #endregion
         #region methods
-        //public TreeViewItem CreateTreeItem(object o)
-        //{
-        //    TreeViewItem item = new TreeViewItem();
-        //    item.Header = o.ToString();
-        //    item.Tag = o;
-        //    item.Items.Add("Loading...");
-        //    return item;
-        //}
-
         #endregion
-    }
-    public class TreeViewItemViewModel : ObservableObject
-    {
-        public string Name { get; set; }
-        public ObservableCollection<TreeViewItemViewModel> Children { get; set; }
-        public bool isExpanded;
-        public bool IsSelected { get; set; }
-
-        public TreeViewItemViewModel()
-        {
-            Children = new ObservableCollection<TreeViewItemViewModel>();
-            Children.Add(new TreeViewItemViewModel() { Name = "2" });
-            Children.Add(new TreeViewItemViewModel() { Name = "2" });
-            Children.Add(new TreeViewItemViewModel() { Name = "2" });
-        }
-        public void OnExpanded()
-        {
-            MessageBox.Show("111");
-            // Load children here
-        }
-
-        public bool CanExpand
-        {
-            get { return Children.Count > 0; }
-        }
-
-        public bool IsExpanded
-        {
-            get { return isExpanded; }
-            set
-            {
-                if (value != isExpanded)
-                {
-                    isExpanded = value;
-                    OnPropertyChanged("IsExpanded");
-                    if (isExpanded && CanExpand)
-                    {
-                        OnExpanded();
-                    }
-                }
-            }
-        }
-
     }
 }

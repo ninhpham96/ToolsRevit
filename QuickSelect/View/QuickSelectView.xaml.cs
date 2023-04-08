@@ -22,7 +22,7 @@ namespace QuickSelect.View
     /// </summary>
     public partial class QuickSelectView : Window
     {
-        QuickSelectViewModel viewModel;
+        QuickSelectViewModel? viewModel;
         public static QuickSelectView? Instance { get; private set; } = null;
         public QuickSelectView(QuickSelectViewModel vm)
         {
