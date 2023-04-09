@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -13,28 +14,17 @@ namespace QuickSelect.ViewModel
 {
     public partial class QuickSelectData : ObservableObject
     {
-        public string? Name { get; set; }
-        IGrouping<string?, Element>? Parent { get; set; }
+        #region properties and field
         [ObservableProperty]
-        public ObservableCollection<QuickSelectData>? children;
-        public QuickSelectData(IGrouping<string?, Element> inumElement)
-        {
-            Parent = inumElement;
-            Children = new ObservableCollection<QuickSelectData>();            
-            Name = inumElement.Key;
-            ClearChildren();
-        }
-        public QuickSelectData(Element element)
-        {
-            Children = new ObservableCollection<QuickSelectData>();
-            Name = element.Name;
-            ClearChildren();
-        }
+        private EnumType? type;
+        public string? Name { get; set; }
+        [ObservableProperty]
+        private object? parent;
         public bool IsExpanded
         {
             get
             {
-                if(Children?.Count==1 && Children.First() ==null) return false;
+                if (Children?.Count == 1 && Children.First() == null) return false;
                 else return true;
             }
             set
@@ -44,26 +34,88 @@ namespace QuickSelect.ViewModel
                 else ClearChildren();
             }
         }
+        private bool isChecked;
+        public bool IsChecked
+        {
+            get { return isChecked; }
+            set
+            {
+                value = isChecked;
+                SetCheckForParent();
+                SetCheckForChildren();
+            }
+        }
+        [ObservableProperty]
+        private ICollection<ElementId>? selectElements;
+        [ObservableProperty]
+        public ObservableCollection<QuickSelectData>? children;
+        #endregion
+        #region Constructor
+        public QuickSelectData(ICollection<Element> elements)
+        {
+            SelectElements = new List<ElementId>();
+            Type = EnumType.ListFamily;
+            Parent = elements;
+            Name = "Family";
+            ClearChildren();
+        }
+        public QuickSelectData(IGrouping<string?, Element> InumElements)
+        {
+            SelectElements = new List<ElementId>();
+            Type = EnumType.Category;
+            Parent = InumElements;
+            Name = InumElements.Key;
+            ClearChildren();
+        }
+        public QuickSelectData(List<Element> elements)
+        {
+            SelectElements = new List<ElementId>();
+            Type = EnumType.Element;
+            Parent = elements;
+            Name = elements.FirstOrDefault().Name;
+            ClearChildren();
+        }
+        #endregion
+        #region methods
         private void ClearChildren()
         {
             Children = new ObservableCollection<QuickSelectData>();
-            Children.Add(null);
-        }
-        #region Command
-        [RelayCommand]
-        private void Click(Object o)
+            if (Type == EnumType.Element) return;
+            Children?.Add(null);
+        }        
+        private void SetCheckForChildren()
         {
-            MessageBox.Show("Message");
+            
         }
+        private void SetCheckForParent()
+        {
+        }
+        #endregion
+        #region Command
         [RelayCommand]
         private void Expanded()
         {
+            Children = new ObservableCollection<QuickSelectData>();
             if (Parent == null)
                 return;
-            Children = new ObservableCollection<QuickSelectData>();
-            foreach (var p in Parent)
+            if (Type == EnumType.ListFamily)
             {
-                Children?.Add(new QuickSelectData(p));
+                ICollection<Element> tempParent = (ICollection<Element>)Parent;
+                IEnumerable<IGrouping<string?, Element>> tempchildren = tempParent
+                    .Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
+                foreach (IGrouping<string?, Element> child in tempchildren)
+                {
+                    Children?.Add(new QuickSelectData(child));
+                }
+            }
+            else if (Type == EnumType.Category)
+            {
+                IGrouping<string?, Element> tempParent = (IGrouping<string?, Element>)Parent;
+                var myList = tempParent.GroupBy(e => e.Name);
+                foreach (var t in myList)
+                {
+                    Children.Add(new QuickSelectData(t.ToList()));
+                }
             }
         }
         #endregion

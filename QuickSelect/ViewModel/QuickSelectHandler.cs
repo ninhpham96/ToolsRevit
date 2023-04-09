@@ -17,12 +17,10 @@ namespace QuickSelect.ViewModel
         private static Document? _doc;
         private static UIApplication? _uiapp;
         private static Autodesk.Revit.ApplicationServices.Application? _app;
-        private static UIDocument? _uidoc;
-        
+        private static UIDocument? _uidoc;        
         private QuickSelectViewModel? quickSelectVM = null;
         public QuickSelectViewModel? QuickSelectVM { get { return quickSelectVM; } set { quickSelectVM = value; } }
         #endregion
-
         public void Execute(UIApplication uiapp)
         {
             _uiapp = uiapp;
@@ -59,7 +57,6 @@ namespace QuickSelect.ViewModel
         {
             TaskDialog.Show("Ninh", "Test");
         }
-
         private void SelectFamily()
         {
             using (Transaction tran = new Transaction(_doc, "1111"))
@@ -71,16 +68,12 @@ namespace QuickSelect.ViewModel
             }
             TaskDialog.Show("Ninh", "Test");
         }
-
         public string GetName()
         {
             return "My External Event";
         }
         #endregion
-
-
         public CommunicatorRequest Request { get; set; } = new CommunicatorRequest();
-
         public class CommunicatorRequest
         {
             private int _request = (int)RequestId.OK;

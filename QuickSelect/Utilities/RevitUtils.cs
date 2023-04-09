@@ -11,14 +11,12 @@ namespace QuickSelect.Utilities
         //https://thebuildingcoder.typepad.com/blog/2013/12/triggering-immediate-external-event-execute.html
         //https://github.com/jeremytammik/RoomEditorApp/tree/master/RoomEditorApp
         //https://thebuildingcoder.typepad.com/blog/2016/03/implementing-the-trackchangescloud-external-event.html#5
-
         /// <summary>
         /// The GetForegroundWindow function returns a 
         /// handle to the foreground window.
         /// </summary>
         [DllImport("user32.dll")]
         private static extern IntPtr GetForegroundWindow();
-
         /// <summary>
         /// Move the window associated with the passed 
         /// handle to the front.
@@ -26,7 +24,6 @@ namespace QuickSelect.Utilities
         [DllImport("user32.dll")]
         private static extern bool SetForegroundWindow(
           IntPtr hWnd);
-
         public static void SetFocusToRevit()
         {
             IntPtr hRevit = ComponentManager.ApplicationWindow;
@@ -38,7 +35,6 @@ namespace QuickSelect.Utilities
                 SetForegroundWindow(hBefore);
             }
         }
-
         #endregion
     }
 }

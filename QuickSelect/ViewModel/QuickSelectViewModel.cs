@@ -16,36 +16,106 @@ using System.Windows.Input;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using System.Diagnostics;
+using Autodesk.Revit.UI.Selection;
 
 namespace QuickSelect.ViewModel
 {
     public partial class QuickSelectViewModel : ObservableObject
     {
+        #region properties and field
         [ObservableProperty]
         private UIApplication? uiApp = null;
         private Document? doc = null;
         private QuickSelectHandler handler;
+        private ICollection<ElementId>? SelectElements = new List<ElementId>();
         [ObservableProperty]
         private bool isOpen = false;
-
         public static QuickSelectViewModel? Instance { get; set; }
         public ObservableCollection<QuickSelectData>? Items { get; set; }
+        #endregion
+        #region constructor
         public QuickSelectViewModel(UIApplication uiapp, QuickSelectHandler handler)
         {
             Instance = this;
             UiApp = uiapp;
             doc = uiapp.ActiveUIDocument.Document;
             this.handler = handler;
-            IEnumerable<IGrouping<string?,Element>> children = Data.Instance.GetAllElementsInView(doc)
-                .Where(e=>e.Category!=null).GroupBy(e=>e.Category!=null?e.Category.Name:null);
-            Items = new ObservableCollection<QuickSelectData>(children.Select(ele => new QuickSelectData(ele)));
-        }
+            ICollection<Element> children = Data.Instance.GetAllElementsInView(doc); ;
+            List<QuickSelectData>? items = new List<QuickSelectData>() { new QuickSelectData(children) };
+            Items = new ObservableCollection<QuickSelectData>(items);
+            Items.First().SelectElements = SelectElements;
 
+        }
+        #endregion
         #region Command
+        [RelayCommand]
+        private void Click(Object o)
+        {
+            try
+            {
+                QuickSelectData data = (QuickSelectData)o;
+                if (data == null) return;
+                if (data.Type == EnumType.Element)
+                {
+                    List<Element> elements = (List<Element>)data.Parent;
+                    if (data.IsChecked)
+                        elements?.ForEach(p =>
+                        {
+                            if (!SelectElements.Contains(p.Id))
+                            {
+                                SelectElements?.Add(p.Id);
+                            }
+                        });
+                    else elements?.ForEach(p =>
+                    {
+                        if (SelectElements.Contains(p.Id))
+                            SelectElements?.Remove(p.Id);
+                    });
+                }
+                else if (data.Type == EnumType.Category)
+                {
+                    List<Element> elements = ((IGrouping<string?, Element>)data.Parent).ToList();
+                    if (data.IsChecked)
+                        elements?.ForEach(p =>
+                        {
+                            if (!SelectElements.Contains(p.Id))
+                            {
+                                SelectElements?.Add(p.Id);
+                            }
+                        });
+                    else elements?.ForEach(p =>
+                    {
+                        if (SelectElements.Contains(p.Id))
+                            SelectElements?.Remove(p.Id);
+                    });
+                }
+                else if (data.Type == EnumType.ListFamily)
+                {
+                    List<Element> elements = (List<Element>)data.Parent;
+                    if (data.IsChecked)
+                        elements?.ForEach(p =>
+                        {
+                            if (!SelectElements.Contains(p.Id))
+                            {
+                                SelectElements?.Add(p.Id);
+                            }
+                        });
+                    else elements?.ForEach(p =>
+                    {
+                        if (SelectElements.Contains(p.Id))
+                            SelectElements?.Remove(p.Id);
+                    });
+                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+            }
+        }
         [RelayCommand]
         private void ClickOk()
         {
-            MessageBox.Show("Test Ok?");
+            SelectedElements();
         }
         [RelayCommand]
         private void ClickZoomIn()
@@ -69,6 +139,10 @@ namespace QuickSelect.ViewModel
         }
         #endregion
         #region methods
+        private void SelectedElements()
+        {
+            UiApp.ActiveUIDocument.Selection.SetElementIds(SelectElements);
+        }
         #endregion
     }
 }

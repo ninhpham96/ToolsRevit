@@ -13,12 +13,15 @@ namespace QuickSelect
 {
     public class AppCommand : IExternalApplication
     {
+        #region properties and fields
         public static QuickSelectHandler? Handler { get; set; } = null;
         public static ExternalEvent? ExEvent { get; set; } = null;
         private readonly string _tabName = "Tools";
         private static UIControlledApplication? _uiApp;
         internal static string assemblyPath = typeof(AppCommand).Assembly.Location;
         internal static AppCommand? GetInstance { get; private set; } = null;
+        #endregion
+        #region methods
         public Result OnStartup(UIControlledApplication a)
         {
             GetInstance = this;
@@ -45,5 +48,6 @@ namespace QuickSelect
             }
 
         }
+        #endregion
     }
 }

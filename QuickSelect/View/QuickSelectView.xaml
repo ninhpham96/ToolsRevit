@@ -3,11 +3,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"        
-        xmlns:local="clr-namespace:QuickSelect.View"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors" 
         xmlns:vm="clr-namespace:QuickSelect.ViewModel"
         x:Name="Win"
         mc:Ignorable="d"
+        WindowStartupLocation="CenterScreen"
         Title="Quick Select" Height="800" Width="400">
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Loaded">
@@ -35,15 +35,18 @@
                 <TreeView.ItemTemplate>
                     <HierarchicalDataTemplate ItemsSource="{Binding Children}">
                         <StackPanel Orientation="Horizontal">
-                            <CheckBox Command="{Binding ClickCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}" Content="{Binding Name}" />
+                            <CheckBox IsChecked="{Binding IsChecked}" Command="{Binding DataContext.ClickCommand
+                                ,ElementName=Win }" 
+                                      CommandParameter="{Binding}"
+                                      Content="{Binding Name}" />
                         </StackPanel>
                     </HierarchicalDataTemplate>
                 </TreeView.ItemTemplate>
             </TreeView>
         </GroupBox>
         <WrapPanel Margin="5" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Row="1">
-            <Button Command="{Binding ClickOkCommand}" Margin="5" Width="50" Content="OK" />
-            <Button Command="{Binding ClickZoomInCommand}" Margin="5" Width="50" Content="ZoomIn" />
+            <Button Command="{Binding ClickOkCommand}" Margin="5" Width="50" Content="Select" />
+            <Button Command="{Binding ClickZoomInCommand}" Margin="5" Width="50" Content="Zoom" />
             <Button Command="{Binding ClickCancelCommand}" Margin="5" Width="50" Content="Cancel" />
         </WrapPanel>
     </Grid>
