@@ -57,7 +57,7 @@ namespace QuickSelect.ViewModel
                 if (data == null) return;
                 if (data.Type == EnumType.Element)
                 {
-                    List<Element> elements = (List<Element>)data.Parent;
+                    List<Element> elements = (List<Element>)data.Current;
                     if (data.IsChecked)
                         elements?.ForEach(p =>
                         {
@@ -74,7 +74,7 @@ namespace QuickSelect.ViewModel
                 }
                 else if (data.Type == EnumType.Category)
                 {
-                    List<Element> elements = ((IGrouping<string?, Element>)data.Parent).ToList();
+                    List<Element> elements = ((IGrouping<string?, Element>)data.Current).ToList();
                     if (data.IsChecked)
                         elements?.ForEach(p =>
                         {
@@ -91,7 +91,7 @@ namespace QuickSelect.ViewModel
                 }
                 else if (data.Type == EnumType.ListFamily)
                 {
-                    List<Element> elements = (List<Element>)data.Parent;
+                    List<Element> elements = (List<Element>)data.Current;
                     if (data.IsChecked)
                         elements?.ForEach(p =>
                         {
@@ -106,11 +106,20 @@ namespace QuickSelect.ViewModel
                             SelectElements?.Remove(p.Id);
                     });
                 }
+                if (data.Children != null&&data.children.FirstOrDefault()!=null)
+                {
+                    foreach (var child in data.Children)
+                    {
+                        child.IsChecked = data.IsChecked;
+                        
+                    }
+                }
             }
             catch (Exception e)
             {
                 MessageBox.Show(e.Message);
             }
+            
         }
         [RelayCommand]
         private void ClickOk()

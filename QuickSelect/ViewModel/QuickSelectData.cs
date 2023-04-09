@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Markup;
 
 namespace QuickSelect.ViewModel
 {
@@ -19,7 +20,7 @@ namespace QuickSelect.ViewModel
         private EnumType? type;
         public string? Name { get; set; }
         [ObservableProperty]
-        private object? parent;
+        private object? current;
         public bool IsExpanded
         {
             get
@@ -40,9 +41,8 @@ namespace QuickSelect.ViewModel
             get { return isChecked; }
             set
             {
-                value = isChecked;
-                SetCheckForParent();
-                SetCheckForChildren();
+                isChecked = value;
+                OnPropertyChanged();
             }
         }
         [ObservableProperty]
@@ -55,7 +55,7 @@ namespace QuickSelect.ViewModel
         {
             SelectElements = new List<ElementId>();
             Type = EnumType.ListFamily;
-            Parent = elements;
+            Current = elements;
             Name = "Family";
             ClearChildren();
         }
@@ -63,7 +63,7 @@ namespace QuickSelect.ViewModel
         {
             SelectElements = new List<ElementId>();
             Type = EnumType.Category;
-            Parent = InumElements;
+            Current = InumElements;
             Name = InumElements.Key;
             ClearChildren();
         }
@@ -71,7 +71,7 @@ namespace QuickSelect.ViewModel
         {
             SelectElements = new List<ElementId>();
             Type = EnumType.Element;
-            Parent = elements;
+            Current = elements;
             Name = elements.FirstOrDefault().Name;
             ClearChildren();
         }
@@ -82,13 +82,16 @@ namespace QuickSelect.ViewModel
             Children = new ObservableCollection<QuickSelectData>();
             if (Type == EnumType.Element) return;
             Children?.Add(null);
-        }        
+        }
         private void SetCheckForChildren()
         {
-            
         }
         private void SetCheckForParent()
         {
+            if (Type == EnumType.ListFamily) return;
+            else if (Type == EnumType.Category)
+            {
+            }
         }
         #endregion
         #region Command
@@ -96,11 +99,11 @@ namespace QuickSelect.ViewModel
         private void Expanded()
         {
             Children = new ObservableCollection<QuickSelectData>();
-            if (Parent == null)
+            if (Current == null)
                 return;
             if (Type == EnumType.ListFamily)
             {
-                ICollection<Element> tempParent = (ICollection<Element>)Parent;
+                ICollection<Element> tempParent = (ICollection<Element>)Current;
                 IEnumerable<IGrouping<string?, Element>> tempchildren = tempParent
                     .Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
                 foreach (IGrouping<string?, Element> child in tempchildren)
@@ -110,13 +113,26 @@ namespace QuickSelect.ViewModel
             }
             else if (Type == EnumType.Category)
             {
-                IGrouping<string?, Element> tempParent = (IGrouping<string?, Element>)Parent;
+                IGrouping<string?, Element> tempParent = (IGrouping<string?, Element>)Current;
                 var myList = tempParent.GroupBy(e => e.Name);
                 foreach (var t in myList)
                 {
                     Children.Add(new QuickSelectData(t.ToList()));
                 }
             }
+            try
+            {
+                foreach (var child in Children)
+                {
+                    child.IsChecked = IsChecked;
+                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+                throw;
+            }
+            
         }
         #endregion
     }
