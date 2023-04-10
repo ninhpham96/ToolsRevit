@@ -22,8 +22,8 @@
     </i:Interaction.Triggers>
     <Grid Margin="5">
         <Grid.RowDefinitions>
-            <RowDefinition Height="9.5*"/>
-            <RowDefinition Height="0.5*"/>
+            <RowDefinition Height="740"/>
+            <RowDefinition Height="60"/>
         </Grid.RowDefinitions>
         <GroupBox Grid.Row="0" Header="Family List" BorderThickness="1">
             <TreeView BorderThickness="0" x:Name="FolderView" ItemsSource="{Binding Items}">
@@ -35,7 +35,7 @@
                 <TreeView.ItemTemplate>
                     <HierarchicalDataTemplate ItemsSource="{Binding Children}">
                         <StackPanel Orientation="Horizontal">
-                            <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}" Command="{Binding DataContext.ClickCommand
+                            <CheckBox IsThreeState="False" IsChecked="{Binding IsChecked, Mode=TwoWay}" Command="{Binding DataContext.ClickCommand
                                 ,ElementName=Win }" 
                                 CommandParameter="{Binding}"
                                 Content="{Binding Name}" />
@@ -44,7 +44,7 @@
                 </TreeView.ItemTemplate>
             </TreeView>
         </GroupBox>
-        <WrapPanel Margin="5" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Row="1">
+        <WrapPanel Margin="5" HorizontalAlignment="Right" Grid.Row="1">
             <Button Command="{Binding ClickOkCommand}" Margin="5" Width="50" Content="Select" />
             <Button Command="{Binding ClickZoomInCommand}" Margin="5" Width="50" Content="Zoom" />
             <Button Command="{Binding ClickCancelCommand}" Margin="5" Width="50" Content="Cancel" />

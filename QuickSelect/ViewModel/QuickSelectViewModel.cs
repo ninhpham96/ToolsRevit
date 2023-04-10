@@ -41,7 +41,7 @@ namespace QuickSelect.ViewModel
             doc = uiapp.ActiveUIDocument.Document;
             this.handler = handler;
             ICollection<Element> children = Data.Instance.GetAllElementsInView(doc); ;
-            List<QuickSelectData>? items = new List<QuickSelectData>() { new QuickSelectData(children) };
+            List<QuickSelectData>? items = new List<QuickSelectData>() { new QuickSelectData(children, null) };
             Items = new ObservableCollection<QuickSelectData>(items);
             Items.First().SelectElements = SelectElements;
 
@@ -49,16 +49,16 @@ namespace QuickSelect.ViewModel
         #endregion
         #region Command
         [RelayCommand]
-        private void Click(Object o)
+        private void Click(QuickSelectData data)
         {
             try
             {
-                QuickSelectData data = (QuickSelectData)o;
+                //QuickSelectData data = (QuickSelectData)o;
                 if (data == null) return;
                 if (data.Type == EnumType.Element)
                 {
                     List<Element> elements = (List<Element>)data.Current;
-                    if (data.IsChecked)
+                    if (data.IsChecked == true)
                         elements?.ForEach(p =>
                         {
                             if (!SelectElements.Contains(p.Id))
@@ -75,7 +75,7 @@ namespace QuickSelect.ViewModel
                 else if (data.Type == EnumType.Category)
                 {
                     List<Element> elements = ((IGrouping<string?, Element>)data.Current).ToList();
-                    if (data.IsChecked)
+                    if (data.IsChecked == true)
                         elements?.ForEach(p =>
                         {
                             if (!SelectElements.Contains(p.Id))
@@ -92,7 +92,7 @@ namespace QuickSelect.ViewModel
                 else if (data.Type == EnumType.ListFamily)
                 {
                     List<Element> elements = (List<Element>)data.Current;
-                    if (data.IsChecked)
+                    if (data.IsChecked == true)
                         elements?.ForEach(p =>
                         {
                             if (!SelectElements.Contains(p.Id))
@@ -105,21 +105,14 @@ namespace QuickSelect.ViewModel
                         if (SelectElements.Contains(p.Id))
                             SelectElements?.Remove(p.Id);
                     });
-                }
-                if (data.Children != null&&data.children.FirstOrDefault()!=null)
-                {
-                    foreach (var child in data.Children)
-                    {
-                        child.IsChecked = data.IsChecked;
-                        
-                    }
-                }
+                }                
+                SetCheckForChildren(data);
+                SetCheckForParent(data);
             }
             catch (Exception e)
             {
                 MessageBox.Show(e.Message);
-            }
-            
+            }            
         }
         [RelayCommand]
         private void ClickOk()
@@ -151,6 +144,42 @@ namespace QuickSelect.ViewModel
         private void SelectedElements()
         {
             UiApp.ActiveUIDocument.Selection.SetElementIds(SelectElements);
+        }
+        private void SetCheckForChildren(QuickSelectData data)
+        {
+            if (data.Children != null && data.children.FirstOrDefault() != null)
+            {
+                foreach (var child in data.Children)
+                {
+                    child.IsChecked = data.IsChecked;
+                    SetCheckForChildren(child);
+                }
+            }
+        }
+        private void SetCheckForParent(QuickSelectData data)
+        {
+            HashSet<bool> check = new HashSet<bool>();
+            if (data == null) return;
+            if(data.Parent != null)
+            {
+                foreach (QuickSelectData child in data.Parent.Children)
+                {
+                    if (child.IsChecked == null)
+                    {
+                        data.Parent.IsChecked = null;
+                        return;
+                    }
+                    else
+                    {
+                        check.Add((bool)child.IsChecked);
+                    }
+                }
+                if (check.Count == 1)
+                    data.Parent.IsChecked = check.First();
+                else
+                    data.Parent.IsChecked = null;
+            }
+            SetCheckForParent(data.Parent);
         }
         #endregion
     }

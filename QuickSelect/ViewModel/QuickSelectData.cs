@@ -20,58 +20,61 @@ namespace QuickSelect.ViewModel
         private EnumType? type;
         public string? Name { get; set; }
         [ObservableProperty]
-        private object? current;
+        private object? current = null;
+        [ObservableProperty]
+        private QuickSelectData? parent;
+        private bool isExpanded;
         public bool IsExpanded
         {
             get
             {
-                if (Children?.Count == 1 && Children.First() == null) return false;
-                else return true;
+                return isExpanded;
+                //if (Children?.Count == 1 && Children.First() == null) return false;
+                //else return true;
             }
             set
             {
+                isExpanded = value;
+                OnPropertyChanged();
                 if (value == true)
                     Expanded();
-                else ClearChildren();
+                //else
+                //    ClearChildren();
             }
         }
-        private bool isChecked;
-        public bool IsChecked
-        {
-            get { return isChecked; }
-            set
-            {
-                isChecked = value;
-                OnPropertyChanged();
-            }
-        }
+        [ObservableProperty]
+        private bool? isChecked = false;
         [ObservableProperty]
         private ICollection<ElementId>? selectElements;
         [ObservableProperty]
         public ObservableCollection<QuickSelectData>? children;
         #endregion
         #region Constructor
-        public QuickSelectData(ICollection<Element> elements)
+        public QuickSelectData(ICollection<Element> elements, QuickSelectData parent)
         {
             SelectElements = new List<ElementId>();
             Type = EnumType.ListFamily;
             Current = elements;
+            Parent = parent;
             Name = "Family";
             ClearChildren();
+            this.parent = parent;
         }
-        public QuickSelectData(IGrouping<string?, Element> InumElements)
+        public QuickSelectData(IGrouping<string?, Element> InumElements, QuickSelectData parent)
         {
             SelectElements = new List<ElementId>();
             Type = EnumType.Category;
             Current = InumElements;
+            Parent = parent;
             Name = InumElements.Key;
             ClearChildren();
         }
-        public QuickSelectData(List<Element> elements)
+        public QuickSelectData(List<Element> elements, QuickSelectData parent)
         {
             SelectElements = new List<ElementId>();
             Type = EnumType.Element;
             Current = elements;
+            Parent = parent;
             Name = elements.FirstOrDefault().Name;
             ClearChildren();
         }
@@ -82,16 +85,6 @@ namespace QuickSelect.ViewModel
             Children = new ObservableCollection<QuickSelectData>();
             if (Type == EnumType.Element) return;
             Children?.Add(null);
-        }
-        private void SetCheckForChildren()
-        {
-        }
-        private void SetCheckForParent()
-        {
-            if (Type == EnumType.ListFamily) return;
-            else if (Type == EnumType.Category)
-            {
-            }
         }
         #endregion
         #region Command
@@ -108,7 +101,7 @@ namespace QuickSelect.ViewModel
                     .Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
                 foreach (IGrouping<string?, Element> child in tempchildren)
                 {
-                    Children?.Add(new QuickSelectData(child));
+                    Children?.Add(new QuickSelectData(child, this));
                 }
             }
             else if (Type == EnumType.Category)
@@ -117,11 +110,12 @@ namespace QuickSelect.ViewModel
                 var myList = tempParent.GroupBy(e => e.Name);
                 foreach (var t in myList)
                 {
-                    Children.Add(new QuickSelectData(t.ToList()));
+                    Children.Add(new QuickSelectData(t.ToList(), this));
                 }
             }
             try
             {
+                //if (IsChecked == null) return;
                 foreach (var child in Children)
                 {
                     child.IsChecked = IsChecked;
@@ -130,9 +124,8 @@ namespace QuickSelect.ViewModel
             catch (Exception e)
             {
                 MessageBox.Show(e.Message);
-                throw;
             }
-            
+
         }
         #endregion
     }
