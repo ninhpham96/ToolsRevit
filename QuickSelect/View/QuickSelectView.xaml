@@ -8,7 +8,8 @@
         x:Name="Win"
         mc:Ignorable="d"
         WindowStartupLocation="CenterScreen"
-        Title="Quick Select" Height="800" Width="400">
+        SizeToContent="Manual"
+        Title="Quick Select" Height="600" Width="300">
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Loaded">
             <i:InvokeCommandAction Command="{Binding WindowClosedCommand}"
@@ -20,12 +21,12 @@
                                    x:Name="interactivityFix"/>
         </i:EventTrigger>
     </i:Interaction.Triggers>
-    <Grid Margin="5">
+    <Grid Margin="5 0 5 0">
         <Grid.RowDefinitions>
-            <RowDefinition Height="740"/>
-            <RowDefinition Height="60"/>
+            <RowDefinition Height="9*"/>
+            <RowDefinition Height="40"/>
         </Grid.RowDefinitions>
-        <GroupBox Grid.Row="0" Header="Family List" BorderThickness="1">
+        <GroupBox VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Row="0" Header="Family List" BorderThickness="1">
             <TreeView BorderThickness="0" x:Name="FolderView" ItemsSource="{Binding Items}">
                 <TreeView.ItemContainerStyle>
                     <Style TargetType="{x:Type TreeViewItem}">
@@ -44,10 +45,10 @@
                 </TreeView.ItemTemplate>
             </TreeView>
         </GroupBox>
-        <WrapPanel Margin="5" HorizontalAlignment="Right" Grid.Row="1">
-            <Button Command="{Binding ClickOkCommand}" Margin="5" Width="50" Content="Select" />
-            <Button Command="{Binding ClickZoomInCommand}" Margin="5" Width="50" Content="Zoom" />
-            <Button Command="{Binding ClickCancelCommand}" Margin="5" Width="50" Content="Cancel" />
-        </WrapPanel>
+            <WrapPanel Grid.Row="1" VerticalAlignment="Top" HorizontalAlignment="Right" >
+            <Button HorizontalAlignment="Right" Command="{Binding ClickOkCommand}" Margin="5 5 5 0" Height="25"  Width="50" Content="Select" />
+            <Button HorizontalAlignment="Right" Command="{Binding ClickZoomInCommand}" Margin="5 5 5 0" Height="25" Width="50" Content="Zoom" />
+            <Button HorizontalAlignment="Right" Command="{Binding ClickCancelCommand}" Margin="5 5 0 0" Height="25" Width="50" Content="Cancel" />
+            </WrapPanel>
     </Grid>
 </Window>

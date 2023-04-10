@@ -10,11 +10,9 @@ namespace QuickSelect
     public class Data
     {
         private static Data? _instance;
-
         private Data()
         {
         }
-
         public static Data Instance
         {
             get
@@ -25,7 +23,6 @@ namespace QuickSelect
                 return _instance;
             }
         }
-
         public List<Family> GetAllFamilyInstances(Document doc)
         {
             var res = new FilteredElementCollector(doc).OfClass(typeof(Family)).Cast<Family>().ToList();
