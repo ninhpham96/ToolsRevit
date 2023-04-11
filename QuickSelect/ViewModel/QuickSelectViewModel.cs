@@ -43,7 +43,7 @@ namespace QuickSelect.ViewModel
             this.handler = handler;
             //ICollection<Element> children = Data.Instance.GetAllElementsInView(doc);
             //List<QuickSelectData>? items = new List<QuickSelectData>() { new QuickSelectData(children, null) };
-            //Items = new ObservableCollection<QuickSelectData>(children);
+            //Items = new ObservableCollection<QuickSelectData>(items);
 
             IEnumerable<IGrouping<string?, Element>> children = Data.Instance.GetAllElementsInView(doc)
                 .Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
@@ -113,18 +113,34 @@ namespace QuickSelect.ViewModel
                 else if (data.Type == EnumType.Parameter)
                 {
                     List<Element> elements = (data.Parent.Current) as List<Element>;
-                    if (data.IsChecked == true)
+                    if (data.Parent.IsChecked != false)
                     {
-                        if (!SelectElements.Contains(elements.First().Id))
+                        elements.ForEach(p => SelectElements.Add(p.Id));
+                    }
+                    else if (data.Parent.IsChecked == false)
+                        elements.ForEach(p => SelectElements.Remove(p.Id));
+                }
+                else if (data.Type == EnumType.Value)
+                {
+                    List<Element> elements = (data.Parent?.Parent?.Current) as List<Element>;
+                    elements.ForEach(e =>
+                    {
+                        if (e.LookupParameter(data.Parent.Name).AsValueString() == data.Name)
                         {
-                            elements.ForEach(p=>SelectElements.Add(p.Id));
+                            if (data.IsChecked == true)
+                            {
+                                if (!SelectElements.Contains(e.Id))
+                                {
+                                    SelectElements.Add(e.Id);
+                                }
+                            }
+                            else
+                            {
+                                if (SelectElements.Contains(e.Id))
+                                    SelectElements.Remove(e.Id);
+                            }
                         }
-                    }
-                    else
-                    {
-                        if (SelectElements.Contains(elements.First().Id))
-                            elements.ForEach(p => SelectElements.Remove(p.Id));
-                    }
+                    });
                 }
                 SetCheckForChildren(data);
                 SetCheckForParent(data);
@@ -178,31 +194,52 @@ namespace QuickSelect.ViewModel
         }
         private void SetCheckForParent(QuickSelectData data)
         {
-            if (data == null) return;
+            if (data.Parent == null) return;
             HashSet<bool> check = new HashSet<bool>();
-            if (data.Parent != null)
+            foreach (QuickSelectData child in data.Parent.Children)
             {
-                foreach (QuickSelectData child in data.Parent.Children)
+                if (child.IsChecked == null)
                 {
-                    if (child.IsChecked == null)
-                    {
-                        data.Parent.IsChecked = null;
-                        return;
-                    }
-                    else
-                    {
-                        check.Add((bool)child.IsChecked);
-                        if (check.Count > 1)
-                        {
-                            data.Parent.IsChecked = null;
-                            SetCheckForParent(data.Parent);
-                            return;
-                        }
-                    }
+                    data.Parent.IsChecked = null;
+                    SetCheckForParent(data.Parent);
+                    return;
                 }
-                data.Parent.IsChecked = check.First();
+                else
+                {
+                    check.Add((bool)child.IsChecked);
+                    if (check.Count > 1) break;
+                }
             }
+            if (check.Count > 1|| check.Count == 0)
+                data.Parent.IsChecked = null;
+            else if (check.Count == 1)
+                data.Parent.IsChecked = check.FirstOrDefault();
             SetCheckForParent(data.Parent);
+            #region
+            //if (data.Parent != null)
+            //{
+            //    foreach (QuickSelectData child in data.Parent.Children)
+            //    {
+            //        if (child.IsChecked == null)
+            //        {
+            //            data.Parent.IsChecked = null;
+            //            //continue;
+            //        }
+            //        else
+            //        {
+            //            check.Add((bool)child.IsChecked);
+            //            if (check.Count > 1)
+            //            {
+            //                data.Parent.IsChecked = null;
+            //                //SetCheckForParent(data.Parent);
+            //                //return;
+            //            }
+            //        }
+            //    }
+            //    //data.Parent.IsChecked = check.First();
+            //}
+            //SetCheckForParent(data.Parent);
+            #endregion
         }
         #endregion
     }

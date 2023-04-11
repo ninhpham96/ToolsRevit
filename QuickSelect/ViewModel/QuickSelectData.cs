@@ -109,69 +109,65 @@ namespace QuickSelect.ViewModel
         [RelayCommand]
         private void Expanded()
         {
-            Children = new ObservableCollection<QuickSelectData>();
-            if (Current == null)
-                return;
-            if (Type == EnumType.ListFamily)
+            if (Children.Count == 1 && Children.FirstOrDefault() == null)
             {
-                ICollection<Element> tempParent = (ICollection<Element>)Current;
-                IEnumerable<IGrouping<string?, Element>> tempchildren = tempParent
-                    .Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
-                foreach (IGrouping<string?, Element> child in tempchildren)
+                Children = new ObservableCollection<QuickSelectData>();
+                if (Current == null)
+                    return;
+                if (Type == EnumType.ListFamily)
                 {
-                    Children?.Add(new QuickSelectData(child, this));
+                    ICollection<Element> tempParent = (ICollection<Element>)Current;
+                    IEnumerable<IGrouping<string?, Element>> tempchildren = tempParent
+                        .Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
+                    foreach (IGrouping<string?, Element> child in tempchildren)
+                    {
+                        Children?.Add(new QuickSelectData(child, this));
+                    }
                 }
-            }
-            else if (Type == EnumType.Category)
-            {
-                IGrouping<string?, Element> tempParent = (IGrouping<string?, Element>)Current;
-                var myList = tempParent.GroupBy(e => e.Name);
-                foreach (var item in myList)
+                else if (Type == EnumType.Category)
                 {
-                    Children.Add(new QuickSelectData(item.ToList(), this));
+                    IGrouping<string?, Element> tempParent = (IGrouping<string?, Element>)Current;
+                    var myList = tempParent.GroupBy(e => e.Name);
+                    foreach (IGrouping<string?, Element> item in myList)
+                    {
+                        Children.Add(new QuickSelectData(item.ToList(), this));
+                    }
                 }
-            }
-            else if (Type == EnumType.Element)
-            {
-                List<Element> tempParent = (List<Element>)Current;
-                ParameterSet parameters = tempParent.FirstOrDefault().Parameters;
-                List<Parameter> para = new List<Parameter>();
-                foreach (Parameter item in parameters)
+                else if (Type == EnumType.Element)
                 {
-                    para.Add(item);
+                    List<Element> tempParent = (List<Element>)Current;
+                    ParameterSet parameters = tempParent.FirstOrDefault().Parameters;
+                    List<Parameter> para = new List<Parameter>();
+                    foreach (Parameter item in parameters)
+                    {
+                        para.Add(item);
+                    }
+                    para.Sort(new ParaComparer());
+                    foreach (Parameter item in para)
+                    {
+                        Children.Add(new QuickSelectData(item, this));
+                    }
                 }
-                para.Sort(new ParaComparer());
-                foreach (Parameter item in para)
+                else if (Type == EnumType.Parameter)
                 {
-                    Children.Add(new QuickSelectData(item, this));
+                    HashSet<string> value = new HashSet<string>();
+                    Parameter? parameter = Current as Parameter;
+                    List<Element>? elements = Parent?.Current as List<Element>;
+                    foreach (Element element in elements)
+                    {
+                        if (element.LookupParameter(Name).AsValueString() == null)
+                            value.Add("Null");
+                        else value.Add(element.LookupParameter(Name).AsValueString());
+                    }
+                    foreach (var v in value)
+                    {
+                        Children.Add(new QuickSelectData(v, this));
+                    }
                 }
-            }
-            else if (Type == EnumType.Parameter)
-            {
-                HashSet<string> value = new HashSet<string>();
-                Parameter parameter = Current as Parameter;
-                List<Element> elements = Parent.Current as List<Element>;
-                foreach (Element element in elements)
-                {
-                    if (element.LookupParameter(Name).AsValueString() == null)
-                        value.Add("Null");
-                    else value.Add(element.LookupParameter(Name).AsValueString());
-                }
-                foreach (var v in value)
-                {
-                    Children.Add(new QuickSelectData(v, this));
-                }
-            }
-            try
-            {
                 foreach (var child in Children)
                 {
                     child.IsChecked = IsChecked;
                 }
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.Message);
             }
         }
         #endregion
