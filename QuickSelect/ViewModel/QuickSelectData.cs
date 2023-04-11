@@ -109,7 +109,7 @@ namespace QuickSelect.ViewModel
         [RelayCommand]
         private void Expanded()
         {
-            if (Children.Count == 1 && Children.FirstOrDefault() == null)
+            if (Children?.Count == 1 && Children.FirstOrDefault() == null)
             {
                 Children = new ObservableCollection<QuickSelectData>();
                 if (Current == null)
@@ -153,7 +153,7 @@ namespace QuickSelect.ViewModel
                     HashSet<string> value = new HashSet<string>();
                     Parameter? parameter = Current as Parameter;
                     List<Element>? elements = Parent?.Current as List<Element>;
-                    foreach (Element element in elements)
+                    foreach (Element? element in elements)
                     {
                         if (element.LookupParameter(Name).AsValueString() == null)
                             value.Add("Null");

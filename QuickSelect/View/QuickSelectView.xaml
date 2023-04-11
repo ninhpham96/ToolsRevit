@@ -48,7 +48,8 @@
             <WrapPanel Grid.Row="1" VerticalAlignment="Top" HorizontalAlignment="Right" >
             <Button HorizontalAlignment="Right" Command="{Binding ClickOkCommand}" Margin="5 5 5 0" Height="25"  Width="50" Content="Select" />
             <Button HorizontalAlignment="Right" Command="{Binding ClickZoomInCommand}" Margin="5 5 5 0" Height="25" Width="50" Content="Zoom" />
-            <Button HorizontalAlignment="Right" Command="{Binding ClickCancelCommand}" Margin="5 5 0 0" Height="25" Width="50" Content="Cancel" />
+            <Button HorizontalAlignment="Right" Command="{Binding ClickCancelCommand}"
+                    CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}" Margin="5 5 0 0" Height="25" Width="50" Content="Cancel" />
             </WrapPanel>
     </Grid>
 </Window>

@@ -18,6 +18,7 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using System.Diagnostics;
 using Autodesk.Revit.UI.Selection;
 using System.Xml.Linq;
+using System.Windows.Markup;
 
 namespace QuickSelect.ViewModel
 {
@@ -113,12 +114,19 @@ namespace QuickSelect.ViewModel
                 else if (data.Type == EnumType.Parameter)
                 {
                     List<Element> elements = (data.Parent.Current) as List<Element>;
-                    if (data.Parent.IsChecked != false)
+                    if (data.IsChecked == true)
+                        elements?.ForEach(p =>
+                        {
+                            if (!SelectElements.Contains(p.Id))
+                            {
+                                SelectElements?.Add(p.Id);
+                            }
+                        });
+                    else elements?.ForEach(p =>
                     {
-                        elements.ForEach(p => SelectElements.Add(p.Id));
-                    }
-                    else if (data.Parent.IsChecked == false)
-                        elements.ForEach(p => SelectElements.Remove(p.Id));
+                        if (SelectElements.Contains(p.Id))
+                            SelectElements?.Remove(p.Id);
+                    });
                 }
                 else if (data.Type == EnumType.Value)
                 {
@@ -130,9 +138,7 @@ namespace QuickSelect.ViewModel
                             if (data.IsChecked == true)
                             {
                                 if (!SelectElements.Contains(e.Id))
-                                {
                                     SelectElements.Add(e.Id);
-                                }
                             }
                             else
                             {
@@ -141,6 +147,17 @@ namespace QuickSelect.ViewModel
                             }
                         }
                     });
+                    SetCheckForChildren(data);
+                    SetCheckForParent(data);
+                    foreach (QuickSelectData d in data.Parent.Parent.Children)
+                    {
+                        if (d.Name == data.Parent.Name) continue;
+                        if (d.IsChecked == false) continue;
+                        if(d.IsChecked == true)
+                        {
+                        }
+                    }
+                    return;
                 }
                 SetCheckForChildren(data);
                 SetCheckForParent(data);
@@ -158,12 +175,13 @@ namespace QuickSelect.ViewModel
         [RelayCommand]
         private void ClickZoomIn()
         {
-            MessageBox.Show("Test ZoomIn?");
+            UiApp.ActiveUIDocument.ShowElements(SelectElements);
         }
         [RelayCommand]
-        private void ClickCancel()
+        private void ClickCancel(object ob)
         {
-            MessageBox.Show("Test Cancel?");
+            var window = ob as Window;
+            if (window != null) window.Close();
         }
         [RelayCommand]
         private void WindowLoaded()
@@ -210,7 +228,7 @@ namespace QuickSelect.ViewModel
                     if (check.Count > 1) break;
                 }
             }
-            if (check.Count > 1|| check.Count == 0)
+            if (check.Count > 1 || check.Count == 0)
                 data.Parent.IsChecked = null;
             else if (check.Count == 1)
                 data.Parent.IsChecked = check.FirstOrDefault();
