@@ -17,9 +17,10 @@ namespace QuickSelect.ViewModel
         private static Document? _doc;
         private static UIApplication? _uiapp;
         private static Autodesk.Revit.ApplicationServices.Application? _app;
-        private static UIDocument? _uidoc;        
+        private static UIDocument? _uidoc;
         private QuickSelectViewModel? quickSelectVM = null;
         public QuickSelectViewModel? QuickSelectVM { get { return quickSelectVM; } set { quickSelectVM = value; } }
+        public CommunicatorRequest Request { get; set; } = new CommunicatorRequest();
         #endregion
         public void Execute(UIApplication uiapp)
         {
@@ -37,12 +38,12 @@ namespace QuickSelect.ViewModel
                         }
                     case RequestId.OK:
                         {
-                            SelectFamily();
+                            Selected();
                             break;
                         }
                     case RequestId.ZoomIn:
                         {
-                            ZoomInFamily();
+                            ZoomIn();
                             break;
                         }
                 }
@@ -53,27 +54,32 @@ namespace QuickSelect.ViewModel
             }
         }
         #region External event
-        private void ZoomInFamily()
+        private void ZoomIn()
         {
-            TaskDialog.Show("Ninh", "Test");
-        }
-        private void SelectFamily()
-        {
-            using (Transaction tran = new Transaction(_doc, "1111"))
+            if (quickSelectVM.SelectElements.Count == 0)
             {
-                tran.Start();
-                if(_doc!=null)
-                    _doc.Delete(new ElementId(58398931));
-                tran.Commit();
+                TaskDialog.Show("Cảnh báo", "Bạn chưa chọn đối tượng nào!", TaskDialogCommonButtons.Ok, TaskDialogResult.Ok);
             }
-            TaskDialog.Show("Ninh", "Test");
+            else
+            {
+                _uidoc.Selection.SetElementIds(quickSelectVM.SelectElements);
+                _uidoc.ShowElements(quickSelectVM.SelectElements);
+            }
+        }
+        private void Selected()
+        {
+            if (quickSelectVM.SelectElements.Count == 0)
+            {
+                TaskDialog.Show("Cảnh báo", "Bạn chưa chọn đối tượng nào!", TaskDialogCommonButtons.Ok, TaskDialogResult.Ok);
+            }
+            else
+                _uidoc.Selection.SetElementIds(quickSelectVM.SelectElements);
         }
         public string GetName()
         {
             return "My External Event";
         }
         #endregion
-        public CommunicatorRequest Request { get; set; } = new CommunicatorRequest();
         public class CommunicatorRequest
         {
             private int _request = (int)RequestId.OK;

@@ -40,5 +40,9 @@ namespace QuickSelect
         {
              return new FilteredElementCollector(doc,doc.ActiveView.Id).ToElements();             
         }
+        public ICollection<Element> GetAllElementsInProject(Document doc)
+        {
+            return new FilteredElementCollector(doc).WhereElementIsNotElementType().ToElements();
+        }
     }
 }

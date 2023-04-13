@@ -42,4 +42,10 @@
 	  </None>
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Page Update="View\QuickSelectView.xaml">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Page>
+	</ItemGroup>
+
 </Project>

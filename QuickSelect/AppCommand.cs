@@ -37,11 +37,11 @@ namespace QuickSelect
         }
         private void BuildUI(UIControlledApplication uiApp)
         {
-            RibbonPanel? panel = RibbonUtils.CreatePanel(uiApp, _tabName, "Utilities");
-            var data = new PushButtonData("btnColor", "Color\nElement", assemblyPath, typeof(CmdQuickSelect).FullName);
-            data.LargeImage = RibbonUtils.ConvertFromBitmap(Properties.Resources.subscript_32);
+            RibbonPanel? panel = RibbonUtils.CreatePanel(uiApp, _tabName, "Select");
+            var data = new PushButtonData("btnSelect", "Quick\nSelect", assemblyPath, typeof(CmdQuickSelect).FullName);
+            data.LargeImage = RibbonUtils.ConvertFromBitmap(Properties.Resources.QuickSelect);
             data.Image = RibbonUtils.ConvertFromBitmap(Properties.Resources.subscript_16);
-            data.ToolTip = "Read level name and update for each elements in parameter VCF_Etage";
+            data.ToolTip = "Quick Select Elements In Activeview";
             if (panel != null)
             {
                 var btnColor = panel.AddItem(data) as PushButton;

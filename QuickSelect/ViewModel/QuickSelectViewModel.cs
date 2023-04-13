@@ -29,27 +29,52 @@ namespace QuickSelect.ViewModel
         private UIApplication? uiApp = null;
         private Document? doc = null;
         private QuickSelectHandler handler;
-        private ICollection<ElementId>? SelectElements = new List<ElementId>();
+        private OptionType optionType;
+        [ObservableProperty]
+        private ICollection<ElementId>? selectElements = new List<ElementId>();
         [ObservableProperty]
         private bool isOpen = false;
         public static QuickSelectViewModel? Instance { get; set; }
         public ObservableCollection<QuickSelectData>? Items { get; set; }
         #endregion
         #region constructor
-        public QuickSelectViewModel(UIApplication uiapp, QuickSelectHandler handler)
+        public QuickSelectViewModel(UIApplication uiapp, QuickSelectHandler handler, OptionType option)
         {
             Instance = this;
             UiApp = uiapp;
             doc = uiapp.ActiveUIDocument.Document;
             this.handler = handler;
+            optionType = option;
             //ICollection<Element> children = Data.Instance.GetAllElementsInView(doc);
             //List<QuickSelectData>? items = new List<QuickSelectData>() { new QuickSelectData(children, null) };
             //Items = new ObservableCollection<QuickSelectData>(items);
 
-            IEnumerable<IGrouping<string?, Element>> children = Data.Instance.GetAllElementsInView(doc)
-                .Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
-            Items = new ObservableCollection<QuickSelectData>(children.Select(c => new QuickSelectData(c, null)));
-            Items.First().SelectElements = SelectElements;
+            if (optionType == OptionType.ActiveView)
+            {
+                IEnumerable<IGrouping<string?, Element>> children = Data.Instance.GetAllElementsInView(doc)
+                    .Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
+                Items = new ObservableCollection<QuickSelectData>(children.Select(c => new QuickSelectData(c, null)));
+                Items.First().SelectElements = SelectElements;
+            }
+            else if (optionType == OptionType.AllProject)
+            {
+                IEnumerable<IGrouping<string?, Element>> children = Data.Instance.GetAllElementsInProject(doc)
+                    .Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
+                Items = new ObservableCollection<QuickSelectData>(children.Select(c => new QuickSelectData(c, null)));
+                Items.First().SelectElements = SelectElements;
+            }
+            else if (optionType == OptionType.Selected)
+            {
+                ICollection<ElementId> selectedID = uiapp.ActiveUIDocument.Selection.GetElementIds();
+                List<Element> selected = new();
+                foreach (ElementId id in selectedID)
+                {
+                    selected.Add(doc.GetElement(id));
+                }
+                IEnumerable<IGrouping<string?, Element>> children = selected.Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
+                Items = new ObservableCollection<QuickSelectData>(children.Select(c => new QuickSelectData(c, null)));
+                Items.First().SelectElements = SelectElements;
+            }
 
         }
         #endregion
@@ -127,6 +152,24 @@ namespace QuickSelect.ViewModel
                         if (SelectElements.Contains(p.Id))
                             SelectElements?.Remove(p.Id);
                     });
+                    SetCheckForChildren(data);
+                    SetCheckForParent(data);
+                    foreach (QuickSelectData item in data.Parent.Children)
+                    {
+                        if (item.Name == data.Name) continue;
+                        if (item.IsChecked == false) continue;
+                        else
+                        {
+                            elements?.ForEach(p =>
+                            {
+                                if (!SelectElements.Contains(p.Id))
+                                {
+                                    SelectElements?.Add(p.Id);
+                                }
+                            });
+                        }
+                    }
+                    return;
                 }
                 else if (data.Type == EnumType.Value)
                 {
@@ -155,6 +198,28 @@ namespace QuickSelect.ViewModel
                         if (d.IsChecked == false) continue;
                         if(d.IsChecked == true)
                         {
+                            foreach (var item in (d.Parent.Current) as List<Element>)
+                            {
+                                if (!SelectElements.Contains(item.Id))
+                                    SelectElements.Add(item.Id);
+                            }
+                        }
+                        if (d.IsChecked == null)
+                        {
+                            foreach (QuickSelectData item in d.Children)
+                            {
+                                elements.ForEach(e =>
+                                {
+                                    if (e.LookupParameter(d.Name).AsValueString() == item.Name)
+                                    {
+                                        if (item.IsChecked == true)
+                                        {
+                                            if (!SelectElements.Contains(e.Id))
+                                                SelectElements.Add(e.Id);
+                                        }
+                                    }
+                                });
+                            }
                         }
                     }
                     return;
@@ -170,12 +235,32 @@ namespace QuickSelect.ViewModel
         [RelayCommand]
         private void ClickOk()
         {
-            SelectedElements();
+            try
+            {
+                handler.QuickSelectVM = Instance;
+                AppCommand.Handler.Request.Make(QuickSelectHandler.RequestId.OK);
+                AppCommand.ExEvent.Raise();
+                RevitUtils.SetFocusToRevit();
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+            }
         }
         [RelayCommand]
         private void ClickZoomIn()
         {
-            UiApp.ActiveUIDocument.ShowElements(SelectElements);
+            try
+            {
+                handler.QuickSelectVM = Instance;
+                AppCommand.Handler.Request.Make(QuickSelectHandler.RequestId.ZoomIn);
+                AppCommand.ExEvent.Raise();
+                RevitUtils.SetFocusToRevit();
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+            }
         }
         [RelayCommand]
         private void ClickCancel(object ob)
@@ -195,10 +280,6 @@ namespace QuickSelect.ViewModel
         }
         #endregion
         #region methods
-        private void SelectedElements()
-        {
-            UiApp.ActiveUIDocument.Selection.SetElementIds(SelectElements);
-        }
         private void SetCheckForChildren(QuickSelectData data)
         {
             if (data.Children != null && data.children.FirstOrDefault() != null)
