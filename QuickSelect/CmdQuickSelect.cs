@@ -10,6 +10,7 @@ using System.Collections.Generic;
 namespace QuickSelect
 {
     [Transaction(TransactionMode.Manual)]
+    [Regeneration(RegenerationOption.Manual)]
     public class CmdQuickSelect : IExternalCommand
     {
         UIDocument? uidoc;

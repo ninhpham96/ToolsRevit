@@ -19,6 +19,7 @@ using System.Diagnostics;
 using Autodesk.Revit.UI.Selection;
 using System.Xml.Linq;
 using System.Windows.Markup;
+using System.Data.SqlTypes;
 
 namespace QuickSelect.ViewModel
 {
@@ -196,7 +197,7 @@ namespace QuickSelect.ViewModel
                     {
                         if (d.Name == data.Parent.Name) continue;
                         if (d.IsChecked == false) continue;
-                        if(d.IsChecked == true)
+                        if (d.IsChecked == true)
                         {
                             foreach (var item in (d.Parent.Current) as List<Element>)
                             {
@@ -278,8 +279,94 @@ namespace QuickSelect.ViewModel
         {
             IsOpen = false;
         }
+        [RelayCommand]
+        private void TextChanged(string keyword)
+        {
+            SearchingElements(keyword);
+        }
         #endregion
         #region methods
+        private void SearchingElements(string keyword)
+        {
+            try
+            {
+                ICollection<Element> oldItems = new List<Element>();
+                ICollection<Element> newItems = new List<Element>();
+
+                foreach (QuickSelectData item in Items)
+                {
+                    foreach (var ite in item.Current as IGrouping<string, Element>)
+                    {
+                        oldItems.Add(ite);
+                    }
+                }
+                foreach (QuickSelectData tem in Items)
+                {
+                    bool flag = false;
+                    if (CheckSubString(keyword, tem.Name)) continue;
+                    foreach (Element ele in tem.Current as IGrouping<string, Element>)
+                    {
+                        flag = false;
+                        if (CheckSubString(keyword, ele.Name)) break;
+                        ParameterSet paras = ele.Parameters;
+
+                        foreach (Parameter par in paras)
+                        {
+                            flag = false;
+                            if (CheckSubString(keyword, par.Definition.Name)) break;
+                            if (ele.get_Parameter(par.Definition) == null || ele.get_Parameter(par.Definition).AsValueString() == ""
+                            || ele.get_Parameter(par.Definition).AsValueString() == "<None>" || ele.get_Parameter(par.Definition).AsValueString() == "-"
+                            || ele.get_Parameter(par.Definition).AsValueString() == "---"
+                            || ele.get_Parameter(par.Definition).AsValueString() == null)
+                            {
+                                if (CheckSubString(keyword, "Value null")) break;
+                            }
+                            else
+                            {
+                                if (CheckSubString(keyword, ele.get_Parameter(par.Definition).AsValueString())) break;
+                            }
+                            flag = true;
+                        }
+                        if (!flag) break;
+                        if (flag)
+                        {
+                            newItems.Add(ele);
+                            continue;
+                        }
+                    }
+                    //if (flag) Items.Remove(tem);
+                }
+                ICollection<Element> temp = new List<Element>();
+                foreach (Element item in oldItems)
+                {
+                    bool flag = true;
+                    foreach (Element ite in newItems)
+                    {
+                        flag = true;
+                        if (ite.Id == item.Id)
+                        {
+                            flag = false;
+                            break;
+                        }
+                    }
+                    if(flag) temp.Add(item);
+                }
+                //IEnumerable<IGrouping<string?, Element>> children = temp
+                //    .Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
+                //Items = new ObservableCollection<QuickSelectData>(children.Select(c => new QuickSelectData(c, null)));
+                //MessageBox.Show(temp.Count().ToString());
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+            }
+        }
+        bool CheckSubString(string keyword, string target)
+        {
+            int isSubstring = target.IndexOf(keyword, StringComparison.OrdinalIgnoreCase);
+            if (isSubstring == -1) return false;
+            else return true;
+        }
         private void SetCheckForChildren(QuickSelectData data)
         {
             if (data.Children != null && data.children.FirstOrDefault() != null)

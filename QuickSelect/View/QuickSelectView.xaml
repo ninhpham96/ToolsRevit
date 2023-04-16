@@ -7,6 +7,7 @@
         xmlns:vm="clr-namespace:QuickSelect.ViewModel"
         x:Name="Win"
         mc:Ignorable="d"
+        MinHeight="400"
         WindowStartupLocation="CenterScreen"
         SizeToContent="Manual"
         Title="Quick Select" Height="600" Width="300">
@@ -23,10 +24,19 @@
     </i:Interaction.Triggers>
     <Grid Margin="5 0 5 0">
         <Grid.RowDefinitions>
+            <RowDefinition Height="30"/>
             <RowDefinition Height="9*"/>
             <RowDefinition Height="40"/>
         </Grid.RowDefinitions>
-        <GroupBox VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Row="0" Header="Family List" BorderThickness="1">
+        <TextBox VerticalContentAlignment="Center" Margin="2" x:Name="txbSearch">
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="TextChanged">
+                    <i:InvokeCommandAction Command="{Binding TextChangedCommand}"
+                                           CommandParameter="{Binding Text,ElementName=txbSearch}"/>
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+        </TextBox>
+        <GroupBox VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Row="1" Header="Family List" BorderThickness="1">
             <TreeView BorderThickness="0" x:Name="FolderView" ItemsSource="{Binding Items}">
                 <TreeView.ItemContainerStyle>
                     <Style TargetType="{x:Type TreeViewItem}">
@@ -45,11 +55,11 @@
                 </TreeView.ItemTemplate>
             </TreeView>
         </GroupBox>
-            <WrapPanel Grid.Row="1" VerticalAlignment="Top" HorizontalAlignment="Right" >
+        <WrapPanel Grid.Row="2" VerticalAlignment="Top" HorizontalAlignment="Right" >
             <Button HorizontalAlignment="Right" Command="{Binding ClickOkCommand}" Margin="5 5 5 0" Height="25"  Width="50" Content="Select" />
             <Button HorizontalAlignment="Right" Command="{Binding ClickZoomInCommand}" Margin="5 5 5 0" Height="25" Width="50" Content="Zoom" />
             <Button HorizontalAlignment="Right" Command="{Binding ClickCancelCommand}"
                     CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}" Margin="5 5 0 0" Height="25" Width="50" Content="Cancel" />
-            </WrapPanel>
+        </WrapPanel>
     </Grid>
 </Window>
