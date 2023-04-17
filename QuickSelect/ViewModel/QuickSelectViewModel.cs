@@ -315,7 +315,6 @@ namespace QuickSelect.ViewModel
             try
             {
                 Stack<Element> temp = new Stack<Element>();
-                //if (stackTwo.Count == 0) return;
                 while(stackTwo.Count > 0)
                 {
                     if(CheckElementOfStack(keyword,stackTwo.Peek()))
