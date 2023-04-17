@@ -30,6 +30,9 @@ namespace QuickSelect.ViewModel
         private UIApplication? uiApp = null;
         private Document? doc = null;
         private QuickSelectHandler handler;
+        //ICollection<Element>? oldItems;
+        //HashSet<Element>? newItems;
+        private string oldkeyword = string.Empty;
         private OptionType optionType;
         [ObservableProperty]
         private ICollection<ElementId>? selectElements = new List<ElementId>();
@@ -37,6 +40,10 @@ namespace QuickSelect.ViewModel
         private bool isOpen = false;
         public static QuickSelectViewModel? Instance { get; set; }
         public ObservableCollection<QuickSelectData>? Items { get; set; }
+        private List<Element>? ListElement = new List<Element>();
+        private Stack<Element>? stackOne = new Stack<Element>();
+        private Stack<Element>? stackTwo = new Stack<Element>();
+        private Stack<Element>? stackTemp = new Stack<Element>();
         #endregion
         #region constructor
         public QuickSelectViewModel(UIApplication uiapp, QuickSelectHandler handler, OptionType option)
@@ -46,9 +53,6 @@ namespace QuickSelect.ViewModel
             doc = uiapp.ActiveUIDocument.Document;
             this.handler = handler;
             optionType = option;
-            //ICollection<Element> children = Data.Instance.GetAllElementsInView(doc);
-            //List<QuickSelectData>? items = new List<QuickSelectData>() { new QuickSelectData(children, null) };
-            //Items = new ObservableCollection<QuickSelectData>(items);
 
             if (optionType == OptionType.ActiveView)
             {
@@ -76,7 +80,17 @@ namespace QuickSelect.ViewModel
                 Items = new ObservableCollection<QuickSelectData>(children.Select(c => new QuickSelectData(c, null)));
                 Items.First().SelectElements = SelectElements;
             }
-
+            //oldItems = new List<Element>();
+            foreach (QuickSelectData item in Items)
+            {
+                foreach (Element ite in item.Current as IGrouping<string, Element>)
+                {
+                    //oldItems.Add(ite);
+                    //ListElement.Add(ite);
+                    stackTemp.Push(ite);
+                }
+            }
+            //newItems = new HashSet<Element>();
         }
         #endregion
         #region Command
@@ -282,85 +296,284 @@ namespace QuickSelect.ViewModel
         [RelayCommand]
         private void TextChanged(string keyword)
         {
-            SearchingElements(keyword);
+            //SearchingElements(keyword);
+            //Searching(keyword);
+            if (oldkeyword.Length < keyword.Length)
+            {
+                SearchNext(keyword);
+            }
+            else
+            {
+                SearchPre(keyword);
+            }
+            oldkeyword = keyword;
         }
         #endregion
         #region methods
-        private void SearchingElements(string keyword)
+        private void SearchPre(string keyword)
         {
             try
             {
-                ICollection<Element> oldItems = new List<Element>();
-                ICollection<Element> newItems = new List<Element>();
-
-                foreach (QuickSelectData item in Items)
+                Stack<Element> temp = new Stack<Element>();
+                //if (stackTwo.Count == 0) return;
+                while(stackTwo.Count > 0)
                 {
-                    foreach (var ite in item.Current as IGrouping<string, Element>)
-                    {
-                        oldItems.Add(ite);
-                    }
+                    if(CheckElementOfStack(keyword,stackTwo.Peek()))
+                        stackOne.Push(stackTwo.Pop());
+                    else
+                        temp.Push(stackTwo.Pop());
                 }
-                foreach (QuickSelectData tem in Items)
+                stackTwo = temp;
+                //while (CheckElementOfStack(keyword, stackTwo.Peek()))
+                //{
+                //    stackOne.Push(stackTwo.Pop());
+                //    if (stackTwo.Count == 0) break;
+                //}
+                IEnumerable<IGrouping<string?, Element>> children = stackOne.ToList()
+                        .Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
+                Items.Clear();
+                foreach (IGrouping<string?, Element> item in children)
                 {
-                    bool flag = false;
-                    if (CheckSubString(keyword, tem.Name)) continue;
-                    foreach (Element ele in tem.Current as IGrouping<string, Element>)
-                    {
-                        flag = false;
-                        if (CheckSubString(keyword, ele.Name)) break;
-                        ParameterSet paras = ele.Parameters;
-
-                        foreach (Parameter par in paras)
-                        {
-                            flag = false;
-                            if (CheckSubString(keyword, par.Definition.Name)) break;
-                            if (ele.get_Parameter(par.Definition) == null || ele.get_Parameter(par.Definition).AsValueString() == ""
-                            || ele.get_Parameter(par.Definition).AsValueString() == "<None>" || ele.get_Parameter(par.Definition).AsValueString() == "-"
-                            || ele.get_Parameter(par.Definition).AsValueString() == "---"
-                            || ele.get_Parameter(par.Definition).AsValueString() == null)
-                            {
-                                if (CheckSubString(keyword, "Value null")) break;
-                            }
-                            else
-                            {
-                                if (CheckSubString(keyword, ele.get_Parameter(par.Definition).AsValueString())) break;
-                            }
-                            flag = true;
-                        }
-                        if (!flag) break;
-                        if (flag)
-                        {
-                            newItems.Add(ele);
-                            continue;
-                        }
-                    }
-                    //if (flag) Items.Remove(tem);
+                    Items.Add(new QuickSelectData(item, null));
                 }
-                ICollection<Element> temp = new List<Element>();
-                foreach (Element item in oldItems)
-                {
-                    bool flag = true;
-                    foreach (Element ite in newItems)
-                    {
-                        flag = true;
-                        if (ite.Id == item.Id)
-                        {
-                            flag = false;
-                            break;
-                        }
-                    }
-                    if(flag) temp.Add(item);
-                }
-                //IEnumerable<IGrouping<string?, Element>> children = temp
-                //    .Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
-                //Items = new ObservableCollection<QuickSelectData>(children.Select(c => new QuickSelectData(c, null)));
-                //MessageBox.Show(temp.Count().ToString());
             }
             catch (Exception e)
             {
                 MessageBox.Show(e.Message);
             }
         }
+        private void SearchNext(string keyword)
+        {
+            try
+            {
+                if (stackTemp.Count > 0)
+                {
+                    while (stackTemp.Count != 0)
+                    {
+                        if (CheckElementOfStack(keyword, stackTemp.Peek()))
+                            stackOne.Push(stackTemp.Pop());
+                        else
+                            stackTwo.Push(stackTemp.Pop());
+                    }
+                }
+                else
+                {
+                    if (stackOne.Count > 0)
+                    {
+                        Stack<Element> temp = new Stack<Element> ();
+                        
+                        while (stackOne.Count != 0)
+                        {
+                            if(CheckElementOfStack(keyword, stackOne.Peek()))
+                                temp.Push(stackOne.Pop());
+                            else
+                                stackTwo.Push(stackOne.Pop());
+                        }
+                        stackOne = temp;
+                        //while (!CheckElementOfStack(keyword, stackOne.Peek()))
+                        //{
+                        //    stackTwo.Push(stackOne.Pop());
+                        //    if (stackOne.Count == 0) break;
+                        //}
+                    }
+                }
+
+                IEnumerable<IGrouping<string?, Element>> children = stackOne.ToList()
+                        .Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
+                Items.Clear();
+                foreach (IGrouping<string?, Element> item in children)
+                {
+                    Items.Add(new QuickSelectData(item, null));
+                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+            }
+
+        }
+        private bool CheckElementOfStack(string keyword, Element ele)
+        {
+            bool flag = true;
+            if (CheckSubString(keyword, ele.Name))
+                return true;
+            if (CheckSubString(keyword, ele.Category.Name))
+                return true;
+            ParameterSet paras = ele.Parameters;
+            foreach (Parameter par in paras)
+            {
+                flag = true;
+                if (CheckSubString(keyword, par.Definition.Name)) break;
+                if (ele.get_Parameter(par.Definition) == null || ele.get_Parameter(par.Definition).AsValueString() == ""
+                || ele.get_Parameter(par.Definition).AsValueString() == "<None>" || ele.get_Parameter(par.Definition).AsValueString() == "-"
+                || ele.get_Parameter(par.Definition).AsValueString() == "---"
+                || ele.get_Parameter(par.Definition).AsValueString() == null)
+                {
+                    if (CheckSubString(keyword, "Value null")) break;
+                }
+                else
+                {
+                    if (CheckSubString(keyword, ele.get_Parameter(par.Definition).AsValueString()))
+                        break;
+                }
+                flag = false;
+            }
+            if (flag)
+                return true;
+            else return false;
+        }
+        private void Searching(string keyword)
+        {
+            try
+            {
+                var Temp = new List<Element>(ListElement);
+                var temp = new List<Element>(ListElement);
+                foreach (var ele in Temp)
+                {
+                    bool flag = false;
+                    if (CheckSubString(keyword, ele.Category.Name)) continue;
+                    if (CheckSubString(keyword, ele.Name)) continue;
+                    ParameterSet paras = ele.Parameters;
+                    foreach (Parameter par in paras)
+                    {
+                        flag = false;
+                        if (CheckSubString(keyword, par.Definition.Name)) break;
+                        if (ele.get_Parameter(par.Definition) == null || ele.get_Parameter(par.Definition).AsValueString() == ""
+                        || ele.get_Parameter(par.Definition).AsValueString() == "<None>" || ele.get_Parameter(par.Definition).AsValueString() == "-"
+                        || ele.get_Parameter(par.Definition).AsValueString() == "---"
+                        || ele.get_Parameter(par.Definition).AsValueString() == null)
+                        {
+                            if (CheckSubString(keyword, "Value null")) break;
+                        }
+                        else
+                        {
+                            if (CheckSubString(keyword, ele.get_Parameter(par.Definition).AsValueString()))
+                                break;
+                        }
+                        flag = true;
+                    }
+                    if (flag)
+                    {
+                        temp.Remove(ele);
+                        continue;
+                    }
+                }
+                IEnumerable<IGrouping<string?, Element>> children = temp
+                    .Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
+                Items.Clear();
+                foreach (IGrouping<string?, Element> item in children)
+                {
+                    Items.Add(new QuickSelectData(item, null));
+                }
+            }
+            catch (Exception)
+            {
+            }
+
+        }
+        //private void SearchingElements(string keyword)
+        //{
+        //    try
+        //    {               
+        //        ICollection<Element> temp = new List<Element>();
+        //        foreach (QuickSelectData tem in Items)
+        //        {
+        //            bool flag = false;
+        //            if (CheckSubString(keyword, tem.Name)) continue;
+        //            foreach (Element ele in tem.Current as IGrouping<string, Element>)
+        //            {
+        //                flag = false;
+        //                if (CheckSubString(keyword, ele.Name)) continue;
+        //                ParameterSet paras = ele.Parameters;
+
+        //                foreach (Parameter par in paras)
+        //                {
+        //                    flag = false;
+        //                    if (CheckSubString(keyword, par.Definition.Name)) break;
+        //                    if (ele.get_Parameter(par.Definition) == null || ele.get_Parameter(par.Definition).AsValueString() == ""
+        //                    || ele.get_Parameter(par.Definition).AsValueString() == "<None>" || ele.get_Parameter(par.Definition).AsValueString() == "-"
+        //                    || ele.get_Parameter(par.Definition).AsValueString() == "---"
+        //                    || ele.get_Parameter(par.Definition).AsValueString() == null)
+        //                    {
+        //                        if (CheckSubString(keyword, "Value null")) break;
+        //                    }
+        //                    else
+        //                    {
+        //                        if (CheckSubString(keyword, ele.get_Parameter(par.Definition).AsValueString())) break;
+        //                    }
+        //                    flag = true;
+        //                }
+        //                if (!flag) continue;
+        //                if (flag)
+        //                {
+        //                    newItems.Add(ele);
+        //                    continue;
+        //                }
+        //            }
+        //        }
+        //        foreach (var ele in newItems)
+        //        {
+        //            bool flag = false;
+        //            if (CheckSubString(keyword,ele.Name))
+        //            {
+        //                temp.Add(ele);
+        //                continue;
+        //            }
+        //            ParameterSet paras = ele.Parameters;
+        //            foreach (Parameter par in paras)
+        //            {
+        //                flag = false;
+        //                if (CheckSubString(keyword, par.Definition.Name)) break;
+        //                if (ele.get_Parameter(par.Definition) == null || ele.get_Parameter(par.Definition).AsValueString() == ""
+        //                || ele.get_Parameter(par.Definition).AsValueString() == "<None>" || ele.get_Parameter(par.Definition).AsValueString() == "-"
+        //                || ele.get_Parameter(par.Definition).AsValueString() == "---"
+        //                || ele.get_Parameter(par.Definition).AsValueString() == null)
+        //                {
+        //                    if (CheckSubString(keyword, "Value null")) break;
+        //                }
+        //                else
+        //                {
+        //                    if (CheckSubString(keyword, ele.get_Parameter(par.Definition).AsValueString())) break;
+        //                }
+        //                flag = true;
+        //            }
+        //            if (!flag)
+        //            {
+        //                temp.Add(ele);
+        //                continue;
+        //            }
+
+        //        }
+        //        newItems.RemoveWhere(e => temp.Contains(e));
+        //        foreach (Element item in oldItems)
+        //        {
+        //            bool flag = true;
+        //            foreach (Element ite in newItems)
+        //            {
+        //                flag = true;
+        //                if (ite.Id == item.Id)
+        //                {
+        //                    flag = false;
+        //                    break;
+        //                }
+        //            }
+        //            if(flag) temp.Add(item);
+        //        }
+
+        //        IEnumerable<IGrouping<string?, Element>> children = temp
+        //            .Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
+        //        Items.Clear();
+        //        foreach (IGrouping<string?, Element> item in children) 
+        //        {
+        //            Items.Add(new QuickSelectData(item, null));
+        //        }
+
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        MessageBox.Show(e.Message);
+        //    }
+        //}
         bool CheckSubString(string keyword, string target)
         {
             int isSubstring = target.IndexOf(keyword, StringComparison.OrdinalIgnoreCase);
