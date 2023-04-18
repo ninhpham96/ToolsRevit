@@ -22,20 +22,24 @@
                                    x:Name="interactivityFix"/>
         </i:EventTrigger>
     </i:Interaction.Triggers>
-    <Grid Margin="5 0 5 0">
+    <Grid Margin="5 2 5 0">
         <Grid.RowDefinitions>
             <RowDefinition Height="30"/>
             <RowDefinition Height="9*"/>
             <RowDefinition Height="40"/>
         </Grid.RowDefinitions>
-        <TextBox VerticalContentAlignment="Center" Margin="2" x:Name="txbSearch">
-            <i:Interaction.Triggers>
-                <i:EventTrigger EventName="TextChanged">
-                    <i:InvokeCommandAction Command="{Binding TextChangedCommand}"
+        <DockPanel LastChildFill="False" Grid.Row="0">
+            <TextBox Width="190" VerticalContentAlignment="Center" Margin="0 2 0 2" Text="{Binding Search}" x:Name="txbSearch">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="TextChanged">
+                        <i:InvokeCommandAction Command="{Binding TextChangedCommand}"
                                            CommandParameter="{Binding Text,ElementName=txbSearch}"/>
-                </i:EventTrigger>
-            </i:Interaction.Triggers>
-        </TextBox>
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+            </TextBox>
+            <Button DockPanel.Dock="Right" x:Name="btnSearch" Command="{Binding SearchingCommand}" Content="Search" Margin="0 2 0 2" Width="40"/>
+            <Button DockPanel.Dock="Right" x:Name="btnClear" Command="{Binding ClearCommand}" Content="Clear" Margin="2" Width="40"/>
+        </DockPanel>
         <GroupBox VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Row="1" Header="Family List" BorderThickness="1">
             <TreeView BorderThickness="0" x:Name="FolderView" ItemsSource="{Binding Items}">
                 <TreeView.ItemContainerStyle>
