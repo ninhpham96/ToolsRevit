@@ -11,6 +11,7 @@ namespace QuickSelect
     {
         #region properties and fields
 
+        public static bool IsShow = false;
         public static QuickSelectHandler? Handler { get; set; } = null;
         public static ExternalEvent? ExEvent { get; set; } = null;
         private static UIControlledApplication? _uiApp;
