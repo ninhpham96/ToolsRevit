@@ -49,14 +49,14 @@
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="TextChanged">
                         <i:InvokeCommandAction Command="{Binding TextChangedCommand}"
-                                           CommandParameter="{Binding Text,ElementName=txbSearch}"/>
+                                           CommandParameter="{Binding Text,ElementName=txbSearch}" />
                     </i:EventTrigger>
                 </i:Interaction.Triggers>
             </TextBox>
-            <Button Grid.Column="1" Name="btnSearch" Command="{Binding SearchingCommand}" Content="Search" />
-            <Button Grid.Column="2" Name="btnClear" Command="{Binding ClearCommand}" Content="Reset" />
+            <Button Grid.Column="1" Name="btnSearch" Command="{Binding SearchingCommand}" Content="検索" />
+            <Button Grid.Column="2" Name="btnClear" Command="{Binding ClearCommand}" Content="リセット" />
         </Grid>
-        <GroupBox VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Row="1" Header="ファミリ" BorderThickness="1">
+        <GroupBox VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Row="1" Header="カテゴリ" BorderThickness="1">
             <TreeView BorderThickness="0" x:Name="FolderView" ItemsSource="{Binding Items}">
                 <TreeView.ItemContainerStyle>
                     <Style TargetType="{x:Type TreeViewItem}">
