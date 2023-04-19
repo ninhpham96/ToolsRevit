@@ -150,7 +150,7 @@ namespace QuickSelect.ViewModel
                 }
                 else if (Type == EnumType.Parameter)
                 {
-                    HashSet<string> value = new HashSet<string>();
+                    List<string> temp = new List<string>();
                     Parameter par = Current as Parameter;
                     List<Element>? elements = Parent?.Current as List<Element>;
                     foreach (Element? ele in elements)
@@ -159,10 +159,12 @@ namespace QuickSelect.ViewModel
                             || ele.get_Parameter(par.Definition).AsValueString() == "<None>" || ele.get_Parameter(par.Definition).AsValueString() == "-"
                             || ele.get_Parameter(par.Definition).AsValueString() == "---"
                             || ele.get_Parameter(par.Definition).AsValueString() == null)
-                            value.Add("Value Null");
-                        else value.Add(ele.LookupParameter(Name).AsValueString());
+                            temp.Add("Value Null");
+                        else temp.Add(ele.LookupParameter(Name).AsValueString());
                     }
-                    foreach (var v in value)
+                    temp.Sort();
+                    HashSet<string> values = new HashSet<string>(temp);
+                    foreach (var v in values)
                     {
                         Children.Add(new QuickSelectData(v, this));
                     }

@@ -42,7 +42,7 @@ namespace QuickSelect.ViewModel
         private bool isOpen = false;
 
         [ObservableProperty]
-        private string? search;
+        private string? search= string.Empty;
 
         public static QuickSelectViewModel? Instance { get; set; }
         public ObservableCollection<QuickSelectData>? Items { get; set; }
@@ -68,7 +68,10 @@ namespace QuickSelect.ViewModel
             {
                 IEnumerable<IGrouping<string?, Element>> children = Data.Instance.GetAllElementsInView(doc)
                     .Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
-                Items = new ObservableCollection<QuickSelectData>(children.Select(c => new QuickSelectData(c, null)));
+                var items = new ObservableCollection<QuickSelectData>(children.Select(c => new QuickSelectData(c, null)));
+
+                Items = new ObservableCollection<QuickSelectData>(items.OrderBy(x=>x.Name));
+
                 Items.First().SelectElements = SelectElements;
             }
             else if (optionType == OptionType.AllProject)
@@ -248,16 +251,20 @@ namespace QuickSelect.ViewModel
         [RelayCommand]
         private void ClickOk()
         {
-            try
+            //try
+            //{
+            //    handler.QuickSelectVM = Instance;
+            //    AppCommand.Handler.Request.Make(QuickSelectHandler.RequestId.OK);
+            //    AppCommand.ExEvent.Raise();
+            //    RevitUtils.SetFocusToRevit();
+            //}
+            //catch (Exception ex)
+            //{
+            //    RevitUtils.ShowException(ex);
+            //}
+            if (SelectElements?.Count > 0)
             {
-                handler.QuickSelectVM = Instance;
-                AppCommand.Handler.Request.Make(QuickSelectHandler.RequestId.OK);
-                AppCommand.ExEvent.Raise();
-                RevitUtils.SetFocusToRevit();
-            }
-            catch (Exception ex)
-            {
-                RevitUtils.ShowException(ex);
+                uiApp.ActiveUIDocument.Selection.SetElementIds(SelectElements);
             }
         }
 
@@ -304,6 +311,7 @@ namespace QuickSelect.ViewModel
             //}
             //oldkeyword = keyword;
             List<Element> temp = new();
+            var tempSearch = Search.Trim();
             if (Search == string.Empty) return;
             foreach (Element ele in ListElement)
             {
@@ -323,6 +331,7 @@ namespace QuickSelect.ViewModel
         private void Clear()
         {
             Search = string.Empty;
+            SelectElements.Clear();
             IEnumerable<IGrouping<string?, Element>> children = ListElement
                         .Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
             Items.Clear();
@@ -424,6 +433,7 @@ namespace QuickSelect.ViewModel
         //}
         private bool CheckElementOfList(string keyword, Element ele)
         {
+            //keyword.Trim();
             bool flag = true;
             if (CheckSubString(keyword, ele.Name))
                 return true;

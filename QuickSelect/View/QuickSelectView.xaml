@@ -45,7 +45,14 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <TextBox Text="{Binding Search}" Name="txbSearch" />
+            <TextBox Text="{Binding Search}" Name="txbSearch">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="TextChanged">
+                        <i:InvokeCommandAction Command="{Binding TextChangedCommand}"
+                                           CommandParameter="{Binding Text,ElementName=txbSearch}"/>
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+            </TextBox>
             <Button Grid.Column="1" Name="btnSearch" Command="{Binding SearchingCommand}" Content="Search" />
             <Button Grid.Column="2" Name="btnClear" Command="{Binding ClearCommand}" Content="Reset" />
         </Grid>
