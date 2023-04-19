@@ -22,8 +22,9 @@ namespace QuickSelect.View
     /// </summary>
     public partial class QuickSelectView : Window
     {
-        QuickSelectViewModel? viewModel;
+        private QuickSelectViewModel? viewModel;
         public static QuickSelectView? Instance { get; private set; } = null;
+
         public QuickSelectView(QuickSelectViewModel vm)
         {
             InitializeComponent();
@@ -45,11 +46,15 @@ namespace QuickSelect.View
                     this.Owner = windowRevitOpen; //Set onwer for WPF window
                     this.DataContext = vm;
                     this.Show();
-                }               
-
+                }
             }
             if (Instance?.WindowState == WindowState.Minimized)
                 Instance.WindowState = WindowState.Normal;
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
         }
     }
 }

@@ -12,6 +12,14 @@
             <Setter Property="Height" Value="23" />
             <Setter Property="Width" Value="75" />
         </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Height" Value="Auto" />
+            <Setter Property="MinHeight" Value="23" />
+            <Setter Property="Margin" Value="3" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="AcceptsReturn" Value="True" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
     </Window.Resources>
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Loaded">
@@ -24,12 +32,24 @@
                                    x:Name="interactivityFix" />
         </i:EventTrigger>
     </i:Interaction.Triggers>
-    <Grid Margin="5 0 5 0">
+    <Grid Margin="5 2 5 0">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition />
             <RowDefinition Height="40" />
         </Grid.RowDefinitions>
-        <GroupBox VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Row="0" Header="ファミリ" BorderThickness="1">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBox Text="{Binding Search}" Name="txbSearch" />
+            <Button Grid.Column="1" Name="btnSearch" Command="{Binding SearchingCommand}" Content="Search" />
+            <Button Grid.Column="2" Name="btnClear" Command="{Binding ClearCommand}" Content="Reset" />
+        </Grid>
+        <GroupBox VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Row="1" Header="ファミリ" BorderThickness="1">
             <TreeView BorderThickness="0" x:Name="FolderView" ItemsSource="{Binding Items}">
                 <TreeView.ItemContainerStyle>
                     <Style TargetType="{x:Type TreeViewItem}">
@@ -48,10 +68,10 @@
                 </TreeView.ItemTemplate>
             </TreeView>
         </GroupBox>
-        <WrapPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Right">
+        <WrapPanel Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Right">
             <Button Command="{Binding ClickOkCommand}" Content="選択の適用" />
             <Button Command="{Binding ClickZoomInCommand}" Content="表示" />
-            <Button Content="キャンセル" IsCancel="True" />
+            <Button Content="キャンセル" IsCancel="True" Click="Button_Click" />
         </WrapPanel>
     </Grid>
 </Window>
