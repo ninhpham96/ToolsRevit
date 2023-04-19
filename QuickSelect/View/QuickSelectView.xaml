@@ -5,7 +5,7 @@
         xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         x:Name="Win" mc:Ignorable="d" WindowStartupLocation="CenterScreen" SizeToContent="Manual" Title="クイック選択"
-        Height="600" Width="400" MinHeight="300" MinWidth="300">
+        Height="600" Width="400" MinHeight="300" MinWidth="300" Closed="Win_Closed">
     <Window.Resources>
         <Style TargetType="Button">
             <Setter Property="Margin" Value="5" />
@@ -46,8 +46,8 @@
             </Grid.ColumnDefinitions>
 
             <TextBox Text="{Binding Search}" Name="txbSearch" />
-            <Button Grid.Column="1" Name="btnSearch" Command="{Binding SearchingCommand}" Content="Search" />
-            <Button Grid.Column="2" Name="btnClear" Command="{Binding ClearCommand}" Content="Reset" />
+            <Button Grid.Column="1" Name="btnSearch" Command="{Binding SearchingCommand}" Content="検索" />
+            <Button Grid.Column="2" Name="btnClear" Command="{Binding ClearCommand}" Content="リセット" />
         </Grid>
         <GroupBox VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Row="1" Header="ファミリ" BorderThickness="1">
             <TreeView BorderThickness="0" x:Name="FolderView" ItemsSource="{Binding Items}">

@@ -17,6 +17,12 @@ namespace QuickSelect
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
+            if (AppCommand.IsShow)
+            {
+                return Result.Cancelled;
+            }
+
+            AppCommand.IsShow = true;
             uidoc = commandData.Application.ActiveUIDocument;
             return Execute(commandData.Application);
         }
@@ -46,6 +52,10 @@ namespace QuickSelect
                 else if (result == TaskDialogResult.CommandLink3)
                 {
                     new QuickSelectView(new QuickSelectViewModel(uiapp, AppCommand.Handler, OptionType.Selected));
+                }
+                else
+                {
+                    AppCommand.IsShow = false;
                 }
 
                 return Result.Succeeded;

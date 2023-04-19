@@ -56,5 +56,10 @@ namespace QuickSelect.View
         {
             Close();
         }
+
+        private void Win_Closed(object sender, EventArgs e)
+        {
+            AppCommand.IsShow = false;
+        }
     }
 }
