@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>MF Quick Select</Name>
+    <Assembly>MF_QuickSelect/QuickSelect.dll</Assembly>
+    <AddInId>88C3E65F-BE4D-410A-8040-5F6DDAE31E28</AddInId>
+    <FullClassName>QuickSelect.AppCommand</FullClassName>
+    <VendorId>B5C40ACF-C086-4B57-9DFA-9E5051D369B4</VendorId>
+    <VendorDescription>MF_tecnica.inc</VendorDescription>
+  </AddIn>
+</RevitAddIns>

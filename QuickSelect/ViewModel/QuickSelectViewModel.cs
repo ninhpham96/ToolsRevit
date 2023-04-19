@@ -25,19 +25,25 @@ namespace QuickSelect.ViewModel
     public partial class QuickSelectViewModel : ObservableObject
     {
         #region properties and field
+
         [ObservableProperty]
         private UIApplication? uiApp = null;
+
         private Document? doc = null;
         private QuickSelectHandler handler;
         private OptionType optionType;
+
         [ObservableProperty]
         private ICollection<ElementId>? selectElements = new List<ElementId>();
+
         [ObservableProperty]
         private bool isOpen = false;
+
         public static QuickSelectViewModel? Instance { get; set; }
         public ObservableCollection<QuickSelectData>? Items { get; set; }
-        #endregion
+        #endregion properties and field
         #region constructor
+
         public QuickSelectViewModel(UIApplication uiapp, QuickSelectHandler handler, OptionType option)
         {
             Instance = this;
@@ -45,9 +51,6 @@ namespace QuickSelect.ViewModel
             doc = uiapp.ActiveUIDocument.Document;
             this.handler = handler;
             optionType = option;
-            //ICollection<Element> children = Data.Instance.GetAllElementsInView(doc);
-            //List<QuickSelectData>? items = new List<QuickSelectData>() { new QuickSelectData(children, null) };
-            //Items = new ObservableCollection<QuickSelectData>(items);
 
             if (optionType == OptionType.ActiveView)
             {
@@ -75,10 +78,11 @@ namespace QuickSelect.ViewModel
                 Items = new ObservableCollection<QuickSelectData>(children.Select(c => new QuickSelectData(c, null)));
                 Items.First().SelectElements = SelectElements;
             }
-
         }
-        #endregion
+
+        #endregion constructor
         #region Command
+
         [RelayCommand]
         private void Click(QuickSelectData data)
         {
@@ -89,15 +93,13 @@ namespace QuickSelect.ViewModel
                 {
                     List<Element> elements = (List<Element>)data.Current;
                     if (data.IsChecked == true)
-                        elements?.ForEach(p =>
-                        {
+                        elements?.ForEach(p => {
                             if (!SelectElements.Contains(p.Id))
                             {
                                 SelectElements?.Add(p.Id);
                             }
                         });
-                    else elements?.ForEach(p =>
-                    {
+                    else elements?.ForEach(p => {
                         if (SelectElements.Contains(p.Id))
                             SelectElements?.Remove(p.Id);
                     });
@@ -106,15 +108,13 @@ namespace QuickSelect.ViewModel
                 {
                     List<Element> elements = ((IGrouping<string?, Element>)data.Current).ToList();
                     if (data.IsChecked == true)
-                        elements?.ForEach(p =>
-                        {
+                        elements?.ForEach(p => {
                             if (!SelectElements.Contains(p.Id))
                             {
                                 SelectElements?.Add(p.Id);
                             }
                         });
-                    else elements?.ForEach(p =>
-                    {
+                    else elements?.ForEach(p => {
                         if (SelectElements.Contains(p.Id))
                             SelectElements?.Remove(p.Id);
                     });
@@ -123,15 +123,13 @@ namespace QuickSelect.ViewModel
                 {
                     List<Element> elements = (List<Element>)data.Current;
                     if (data.IsChecked == true)
-                        elements?.ForEach(p =>
-                        {
+                        elements?.ForEach(p => {
                             if (!SelectElements.Contains(p.Id))
                             {
                                 SelectElements?.Add(p.Id);
                             }
                         });
-                    else elements?.ForEach(p =>
-                    {
+                    else elements?.ForEach(p => {
                         if (SelectElements.Contains(p.Id))
                             SelectElements?.Remove(p.Id);
                     });
@@ -140,15 +138,13 @@ namespace QuickSelect.ViewModel
                 {
                     List<Element> elements = (data.Parent.Current) as List<Element>;
                     if (data.IsChecked == true)
-                        elements?.ForEach(p =>
-                        {
+                        elements?.ForEach(p => {
                             if (!SelectElements.Contains(p.Id))
                             {
                                 SelectElements?.Add(p.Id);
                             }
                         });
-                    else elements?.ForEach(p =>
-                    {
+                    else elements?.ForEach(p => {
                         if (SelectElements.Contains(p.Id))
                             SelectElements?.Remove(p.Id);
                     });
@@ -160,8 +156,7 @@ namespace QuickSelect.ViewModel
                         if (item.IsChecked == false) continue;
                         else
                         {
-                            elements?.ForEach(p =>
-                            {
+                            elements?.ForEach(p => {
                                 if (!SelectElements.Contains(p.Id))
                                 {
                                     SelectElements?.Add(p.Id);
@@ -174,8 +169,7 @@ namespace QuickSelect.ViewModel
                 else if (data.Type == EnumType.Value)
                 {
                     List<Element> elements = (data.Parent?.Parent?.Current) as List<Element>;
-                    elements.ForEach(e =>
-                    {
+                    elements.ForEach(e => {
                         if (e.LookupParameter(data.Parent.Name).AsValueString() == data.Name)
                         {
                             if (data.IsChecked == true)
@@ -196,7 +190,7 @@ namespace QuickSelect.ViewModel
                     {
                         if (d.Name == data.Parent.Name) continue;
                         if (d.IsChecked == false) continue;
-                        if(d.IsChecked == true)
+                        if (d.IsChecked == true)
                         {
                             foreach (var item in (d.Parent.Current) as List<Element>)
                             {
@@ -208,8 +202,7 @@ namespace QuickSelect.ViewModel
                         {
                             foreach (QuickSelectData item in d.Children)
                             {
-                                elements.ForEach(e =>
-                                {
+                                elements.ForEach(e => {
                                     if (e.LookupParameter(d.Name).AsValueString() == item.Name)
                                     {
                                         if (item.IsChecked == true)
@@ -227,11 +220,9 @@ namespace QuickSelect.ViewModel
                 SetCheckForChildren(data);
                 SetCheckForParent(data);
             }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.Message);
-            }
+            catch (Exception ex) { RevitUtils.ShowException(ex); }
         }
+
         [RelayCommand]
         private void ClickOk()
         {
@@ -242,11 +233,12 @@ namespace QuickSelect.ViewModel
                 AppCommand.ExEvent.Raise();
                 RevitUtils.SetFocusToRevit();
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                MessageBox.Show(e.Message);
+                RevitUtils.ShowException(ex);
             }
         }
+
         [RelayCommand]
         private void ClickZoomIn()
         {
@@ -257,29 +249,27 @@ namespace QuickSelect.ViewModel
                 AppCommand.ExEvent.Raise();
                 RevitUtils.SetFocusToRevit();
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                MessageBox.Show(e.Message);
+                RevitUtils.ShowException(ex);
             }
         }
-        [RelayCommand]
-        private void ClickCancel(object ob)
-        {
-            var window = ob as Window;
-            if (window != null) window.Close();
-        }
+
         [RelayCommand]
         private void WindowLoaded()
         {
             IsOpen = true;
         }
+
         [RelayCommand]
         private void WindowClosed()
         {
             IsOpen = false;
         }
-        #endregion
+
+        #endregion Command
         #region methods
+
         private void SetCheckForChildren(QuickSelectData data)
         {
             if (data.Children != null && data.children.FirstOrDefault() != null)
@@ -291,6 +281,7 @@ namespace QuickSelect.ViewModel
                 }
             }
         }
+
         private void SetCheckForParent(QuickSelectData data)
         {
             if (data.Parent == null) return;
@@ -338,8 +329,9 @@ namespace QuickSelect.ViewModel
             //    //data.Parent.IsChecked = check.First();
             //}
             //SetCheckForParent(data.Parent);
-            #endregion
+            #endregion methods
         }
+
         #endregion
     }
 }

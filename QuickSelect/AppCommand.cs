@@ -1,53 +1,68 @@
-﻿#region Namespaces
+﻿using Autodesk.Revit.UI;
+using QuickSelect.Utilities;
+using QuickSelect.ViewModel;
 using System;
 using System.Collections.Generic;
-using Autodesk.Revit.UI;
-using System.Reflection;
-using TaskDialog = Autodesk.Revit.UI.TaskDialog;
-using QuickSelect.ViewModel;
-using QuickSelect.Utilities;
-using System.Configuration.Assemblies;
-#endregion
+using System.Linq;
 
 namespace QuickSelect
 {
     public class AppCommand : IExternalApplication
     {
         #region properties and fields
+
         public static QuickSelectHandler? Handler { get; set; } = null;
         public static ExternalEvent? ExEvent { get; set; } = null;
-        private readonly string _tabName = "Tools";
         private static UIControlledApplication? _uiApp;
         internal static string assemblyPath = typeof(AppCommand).Assembly.Location;
         internal static AppCommand? GetInstance { get; private set; } = null;
-        #endregion
+
+        #endregion properties and fields
+
         #region methods
-        public Result OnStartup(UIControlledApplication a)
+
+        public Result OnStartup(UIControlledApplication app)
         {
             GetInstance = this;
-            _uiApp = a;
-            BuildUI(a);
+            _uiApp = app;
+            CreateRibbonPanel(app);
             Handler = new QuickSelectHandler();
             ExEvent = ExternalEvent.Create(Handler);
             return Result.Succeeded;
         }
-        public Result OnShutdown(UIControlledApplication a)
+
+        public Result OnShutdown(UIControlledApplication app)
         {
             return Result.Succeeded;
         }
-        private void BuildUI(UIControlledApplication uiApp)
-        {
-            RibbonPanel? panel = RibbonUtils.CreatePanel(uiApp, _tabName, "Select");
-            var data = new PushButtonData("btnSelect", "Quick\nSelect", assemblyPath, typeof(CmdQuickSelect).FullName);
-            data.LargeImage = RibbonUtils.ConvertFromBitmap(Properties.Resources.QuickSelect);
-            data.Image = RibbonUtils.ConvertFromBitmap(Properties.Resources.subscript_16);
-            data.ToolTip = "Quick Select Elements In Activeview";
-            if (panel != null)
-            {
-                var btnColor = panel.AddItem(data) as PushButton;
-            }
 
+        private void CreateRibbonPanel(UIControlledApplication application)
+        {
+            string tabName = "MF Tools";
+            string panelName = "クイック選択";
+            string buttonName = "クイック選択";
+
+            try
+            {
+                application.CreateRibbonTab(tabName);
+            }
+            catch (Exception) { }
+            List<RibbonPanel> allPanel = application.GetRibbonPanels(tabName);
+            RibbonPanel panel = allPanel.FirstOrDefault(x => x.Name.Equals(panelName));
+            if (panel == null)
+                panel = application.CreateRibbonPanel(tabName, panelName);
+
+            PushButtonData buttonData = new PushButtonData(
+                name: buttonName,
+                text: buttonName,
+                assemblyName: assemblyPath,
+                className: typeof(CmdQuickSelect).FullName);
+            PushButton pushButton = panel.AddItem(buttonData) as PushButton;
+            pushButton.ToolTip = "パラメータで要素を選択";
+            pushButton.LargeImage = RibbonUtils.ConvertFromBitmap(Properties.Resources.QuickSelect);
+            pushButton.Image = RibbonUtils.ConvertFromBitmap(Properties.Resources.subscript_16);
         }
-        #endregion
+
+        #endregion methods
     }
 }
