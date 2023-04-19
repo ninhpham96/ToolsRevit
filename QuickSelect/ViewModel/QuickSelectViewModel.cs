@@ -78,8 +78,12 @@ namespace QuickSelect.ViewModel
             {
                 IEnumerable<IGrouping<string?, Element>> children = Data.Instance.GetAllElementsInProject(doc)
                     .Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
-                Items = new ObservableCollection<QuickSelectData>(children.Select(c => new QuickSelectData(c, null)));
+                var items = new ObservableCollection<QuickSelectData>(children.Select(c => new QuickSelectData(c, null)));
+
+                Items = new ObservableCollection<QuickSelectData>(items.OrderBy(x => x.Name));
+
                 Items.First().SelectElements = SelectElements;
+
             }
             else if (optionType == OptionType.Selected)
             {
@@ -90,7 +94,10 @@ namespace QuickSelect.ViewModel
                     selected.Add(doc.GetElement(id));
                 }
                 IEnumerable<IGrouping<string?, Element>> children = selected.Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
-                Items = new ObservableCollection<QuickSelectData>(children.Select(c => new QuickSelectData(c, null)));
+                var items = new ObservableCollection<QuickSelectData>(children.Select(c => new QuickSelectData(c, null)));
+
+                Items = new ObservableCollection<QuickSelectData>(items.OrderBy(x => x.Name));
+
                 Items.First().SelectElements = SelectElements;
             }
 
@@ -251,20 +258,16 @@ namespace QuickSelect.ViewModel
         [RelayCommand]
         private void ClickOk()
         {
-            //try
-            //{
-            //    handler.QuickSelectVM = Instance;
-            //    AppCommand.Handler.Request.Make(QuickSelectHandler.RequestId.OK);
-            //    AppCommand.ExEvent.Raise();
-            //    RevitUtils.SetFocusToRevit();
-            //}
-            //catch (Exception ex)
-            //{
-            //    RevitUtils.ShowException(ex);
-            //}
-            if (SelectElements?.Count > 0)
+            try
             {
-                uiApp.ActiveUIDocument.Selection.SetElementIds(SelectElements);
+                handler.QuickSelectVM = Instance;
+                AppCommand.Handler.Request.Make(QuickSelectHandler.RequestId.OK);
+                AppCommand.ExEvent.Raise();
+                RevitUtils.SetFocusToRevit();
+            }
+            catch (Exception ex)
+            {
+                RevitUtils.ShowException(ex);
             }
         }
 
@@ -433,7 +436,6 @@ namespace QuickSelect.ViewModel
         //}
         private bool CheckElementOfList(string keyword, Element ele)
         {
-            //keyword.Trim();
             bool flag = true;
             if (CheckSubString(keyword, ele.Name))
                 return true;
@@ -443,7 +445,7 @@ namespace QuickSelect.ViewModel
             foreach (Parameter par in paras)
             {
                 flag = true;
-                if (CheckSubString(keyword, par.Definition.Name)) break;
+                if (par.Definition == null || CheckSubString(keyword, par.Definition.Name)) break;
                 if (ele.get_Parameter(par.Definition) == null || ele.get_Parameter(par.Definition).AsValueString() == ""
                 || ele.get_Parameter(par.Definition).AsValueString() == "<None>" || ele.get_Parameter(par.Definition).AsValueString() == "-"
                 || ele.get_Parameter(par.Definition).AsValueString() == "---"
