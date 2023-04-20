@@ -49,6 +49,7 @@ namespace QuickSelect.ViewModel
         private ICollection<ElementId>? selectElements;
         [ObservableProperty]
         public ObservableCollection<QuickSelectData>? children;
+        private string keyword = string.Empty;
         #endregion
         #region Constructor
         public QuickSelectData(ICollection<Element> elements, QuickSelectData parent)
@@ -60,34 +61,37 @@ namespace QuickSelect.ViewModel
             Name = "Family";
             ClearChildren();
         }
-        public QuickSelectData(IGrouping<string?, Element> InumElements, QuickSelectData parent)
+        public QuickSelectData(IGrouping<string?, Element> InumElements, string keyword, QuickSelectData parent)
         {
             SelectElements = new List<ElementId>();
             Type = EnumType.Category;
             Current = InumElements;
             Parent = parent;
             Name = InumElements.Key;
+            this.keyword = keyword;
             ClearChildren();
         }
-        public QuickSelectData(List<Element> elements, QuickSelectData parent)
+        public QuickSelectData(List<Element> elements, string keyword, QuickSelectData parent)
         {
             SelectElements = new List<ElementId>();
             Type = EnumType.Element;
             Current = elements;
             Parent = parent;
             Name = elements.FirstOrDefault().Name;
+            this.keyword = keyword;
             ClearChildren();
         }
-        public QuickSelectData(Parameter parameter, QuickSelectData parent)
+        public QuickSelectData(Parameter parameter, string keyword, QuickSelectData parent)
         {
             SelectElements = new List<ElementId>();
             Type = EnumType.Parameter;
             Current = parameter;
             Parent = parent;
             Name = parameter.Definition.Name;
+            this.keyword = keyword;
             ClearChildren();
         }
-        public QuickSelectData(string valuestring, QuickSelectData parent)
+        public QuickSelectData(string valuestring, string keyword, QuickSelectData parent)
         {
             SelectElements = new List<ElementId>();
             Type = EnumType.Value;
@@ -98,6 +102,12 @@ namespace QuickSelect.ViewModel
         }
         #endregion
         #region methods
+        private bool CheckSubString(string keyword, string target)
+        {
+            int isSubstring = target.IndexOf(keyword, StringComparison.OrdinalIgnoreCase);
+            if (isSubstring == -1) return false;
+            else return true;
+        }
         private void ClearChildren()
         {
             Children = new ObservableCollection<QuickSelectData>();
@@ -121,7 +131,7 @@ namespace QuickSelect.ViewModel
                         .Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
                     foreach (IGrouping<string?, Element> child in tempchildren)
                     {
-                        Children?.Add(new QuickSelectData(child, this));
+                        Children?.Add(new QuickSelectData(child, keyword, this));
                     }
                 }
                 else if (Type == EnumType.Category)
@@ -130,22 +140,91 @@ namespace QuickSelect.ViewModel
                     var myList = tempParent.GroupBy(e => e.Name);
                     foreach (IGrouping<string?, Element> item in myList)
                     {
-                        Children.Add(new QuickSelectData(item.ToList(), this));
+                        Children.Add(new QuickSelectData(item.ToList(), keyword, this));
                     }
                 }
                 else if (Type == EnumType.Element)
                 {
                     List<Element> tempParent = (List<Element>)Current;
-                    ParameterSet parameters = tempParent.FirstOrDefault().Parameters;
                     List<Parameter> para = new List<Parameter>();
-                    foreach (Parameter item in parameters)
+                    foreach (var ele in tempParent)
                     {
-                        para.Add(item);
+                        foreach (Parameter item in ele.Parameters)
+                        {
+                            if (item.Definition == null) continue;
+                            //if (item.StorageType == StorageType.ElementId)
+                            //{
+                            //    if (item.AsElementId() == null)
+                            //    {
+                            //        if (CheckSubString(keyword, ""))
+                            //            para.Add(item);
+                            //    }
+                            //    else
+                            //    {
+                            //        if (CheckSubString(keyword, item.AsElementId().ToString()))
+                            //            para.Add(item);
+                            //    }
+                                
+                            //}
+                            //else if (item.StorageType == StorageType.String)
+                            //{
+                            //    if (item.AsValueString() == null)
+                            //    {
+                            //        if (CheckSubString(keyword, ""))
+                            //            para.Add(item);
+                            //    }
+                            //    else
+                            //    {
+                            //    if (CheckSubString(keyword, item.AsValueString()))
+                            //        para.Add(item);
+                            //    }
+                            //}
+                            //else if (item.StorageType == StorageType.Double)
+                            //{
+                            //    if (CheckSubString(keyword, item.AsDouble().ToString()))
+                            //        para.Add(item);
+                            //}
+                            //else if (item.StorageType == StorageType.Integer)
+                            //{
+                            //    if (item.AsElementId() == null) continue;
+                            //    if (CheckSubString(keyword, item.AsInteger().ToString()))
+                            //        para.Add(item);
+                            //}
+                            //else if (item.StorageType == StorageType.None)
+                            //{
+                            //    if (CheckSubString(keyword, item.AsInteger().ToString()))
+                            //        para.Add(item);
+                            //}
+                            if (item.AsValueString() == null)
+                            {
+                                if (CheckSubString(keyword, ""))
+                                    para.Add(item);
+                            }
+                            else
+                            {
+                                if (CheckSubString(keyword, item.AsValueString()))
+                                    para.Add(item);
+                            }
+                        }
                     }
                     para.Sort(new ParaComparer());
-                    foreach (Parameter item in para)
+                    if (keyword != string.Empty)
                     {
-                        Children.Add(new QuickSelectData(item, this));
+                        foreach (Parameter item in para)
+                        {
+                            Children.Add(new QuickSelectData(item, keyword, this));
+                        }
+                    }
+                    else
+                    {
+                        for (int i = 0; i < para.Count; i++)
+                        {
+                            if (i % 2 == 0)
+                            {
+                                Children.Add(new QuickSelectData(para[i], keyword, this));
+                            }
+                            else continue;
+                        }
                     }
                 }
                 else if (Type == EnumType.Parameter)
@@ -155,18 +234,16 @@ namespace QuickSelect.ViewModel
                     List<Element>? elements = Parent?.Current as List<Element>;
                     foreach (Element? ele in elements)
                     {
-                        if (ele.get_Parameter(par.Definition) == null || ele.get_Parameter(par.Definition).AsValueString() == ""
-                            || ele.get_Parameter(par.Definition).AsValueString() == "<None>" || ele.get_Parameter(par.Definition).AsValueString() == "-"
-                            || ele.get_Parameter(par.Definition).AsValueString() == "---"
-                            || ele.get_Parameter(par.Definition).AsValueString() == null)
-                            temp.Add("Value Null");
+                        if (ele.get_Parameter(par.Definition).AsValueString() == null)
+                            temp.Add(string.Empty);
                         else temp.Add(ele.LookupParameter(Name).AsValueString());
                     }
                     temp.Sort();
                     HashSet<string> values = new HashSet<string>(temp);
                     foreach (var v in values)
                     {
-                        Children.Add(new QuickSelectData(v, this));
+                        if (CheckSubString(keyword, v))
+                            Children.Add(new QuickSelectData(v, keyword, this));
                     }
                 }
                 foreach (var child in Children)

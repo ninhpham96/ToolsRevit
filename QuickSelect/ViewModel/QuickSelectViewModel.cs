@@ -68,7 +68,7 @@ namespace QuickSelect.ViewModel
             {
                 IEnumerable<IGrouping<string?, Element>> children = Data.Instance.GetAllElementsInView(doc)
                     .Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
-                var items = new ObservableCollection<QuickSelectData>(children.Select(c => new QuickSelectData(c, null)));
+                var items = new ObservableCollection<QuickSelectData>(children.Select(c => new QuickSelectData(c,Search, null)));
 
                 Items = new ObservableCollection<QuickSelectData>(items.OrderBy(x=>x.Name));
 
@@ -78,7 +78,7 @@ namespace QuickSelect.ViewModel
             {
                 IEnumerable<IGrouping<string?, Element>> children = Data.Instance.GetAllElementsInProject(doc)
                     .Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
-                var items = new ObservableCollection<QuickSelectData>(children.Select(c => new QuickSelectData(c, null)));
+                var items = new ObservableCollection<QuickSelectData>(children.Select(c => new QuickSelectData(c, Search, null)));
 
                 Items = new ObservableCollection<QuickSelectData>(items.OrderBy(x => x.Name));
 
@@ -94,7 +94,7 @@ namespace QuickSelect.ViewModel
                     selected.Add(doc.GetElement(id));
                 }
                 IEnumerable<IGrouping<string?, Element>> children = selected.Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
-                var items = new ObservableCollection<QuickSelectData>(children.Select(c => new QuickSelectData(c, null)));
+                var items = new ObservableCollection<QuickSelectData>(children.Select(c => new QuickSelectData(c, Search, null)));
 
                 Items = new ObservableCollection<QuickSelectData>(items.OrderBy(x => x.Name));
 
@@ -313,12 +313,13 @@ namespace QuickSelect.ViewModel
             //    SearchPre(keyword);
             //}
             //oldkeyword = keyword;
+            
             List<Element> temp = new();
             var tempSearch = Search.Trim();
             if (Search == string.Empty) return;
             foreach (Element ele in ListElement)
             {
-                if (CheckElementOfList(search, ele))
+                if (CheckElementOfList(tempSearch, ele))
                     temp.Add(ele);
             }
             IEnumerable<IGrouping<string?, Element>> children = temp
@@ -326,7 +327,7 @@ namespace QuickSelect.ViewModel
             Items.Clear();
             foreach (IGrouping<string?, Element> item in children)
             {
-                Items.Add(new QuickSelectData(item, null));
+                Items.Add(new QuickSelectData(item,Search, null));
             }
         }
 
@@ -340,7 +341,7 @@ namespace QuickSelect.ViewModel
             Items.Clear();
             foreach (IGrouping<string?, Element> item in children)
             {
-                Items.Add(new QuickSelectData(item, null));
+                Items.Add(new QuickSelectData(item, Search, null));
             }
         }
 
@@ -442,20 +443,86 @@ namespace QuickSelect.ViewModel
             if (CheckSubString(keyword, ele.Category.Name))
                 return true;
             ParameterSet paras = ele.Parameters;
-            foreach (Parameter par in paras)
+            foreach (Parameter p in paras)
             {
                 flag = true;
-                if (par.Definition == null || CheckSubString(keyword, par.Definition.Name)) break;
-                if (ele.get_Parameter(par.Definition) == null || ele.get_Parameter(par.Definition).AsValueString() == ""
-                || ele.get_Parameter(par.Definition).AsValueString() == "<None>" || ele.get_Parameter(par.Definition).AsValueString() == "-"
-                || ele.get_Parameter(par.Definition).AsValueString() == "---"
-                || ele.get_Parameter(par.Definition).AsValueString() == null)
+                if(p.Definition == null) continue;
+                if (CheckSubString(keyword, p.Definition.Name)) break;
+                //Parameter para = ele.get_Parameter(p.Definition);
+                //if (para == null) continue;
+                //if (para.StorageType == StorageType.ElementId)
+                //{
+                //    if (para.AsElementId() == null)
+                //    {
+                //        if (CheckSubString(keyword, ""))
+                //            break;
+                //    }
+                //    else
+                //    {
+                //        if (CheckSubString(keyword, para.AsElementId().ToString()))
+                //            break;
+                //    }
+                //}
+                //else if (para.StorageType == StorageType.String)
+                //{
+                //    if (para.AsValueString() == null)
+                //    {
+                //        if (CheckSubString(keyword, ""))
+                //            break;
+                //    }
+                //    else
+                //    {
+                //        if (CheckSubString(keyword, para.AsValueString().ToString()))
+                //            break;
+                //    }
+                //}
+                //else if (para.StorageType == StorageType.Double)
+                //{
+                //    if (para.AsDouble() == null)
+                //    {
+                //        if (CheckSubString(keyword, ""))
+                //            break;
+                //    }
+                //    else
+                //    {
+                //        if (CheckSubString(keyword, para.AsDouble().ToString()))
+                //            break;
+                //    }
+                //}
+                //else if (para.StorageType == StorageType.Integer)
+                //{
+                //    if (para.AsInteger() == null)
+                //    {
+                //        if (CheckSubString(keyword, ""))
+                //            break;
+                //    }
+                //    else
+                //    {
+                //        if (CheckSubString(keyword, para.AsInteger().ToString()))
+                //            break;
+                //    }
+                //}
+                //else if (para.StorageType == StorageType.None)
+                //{
+                //    if (para.AsInteger() == null)
+                //    {
+                //        if (CheckSubString(keyword, ""))
+                //            break;
+                //    }
+                //    else
+                //    {
+                //        if (CheckSubString(keyword, para.AsInteger().ToString()))
+                //            break;
+                //    }
+                //}
+
+                if (ele.get_Parameter(p.Definition).AsValueString() == null)
                 {
                     if (CheckSubString(keyword, "Value null")) break;
                 }
                 else
                 {
-                    if (CheckSubString(keyword, ele.get_Parameter(par.Definition).AsValueString()))
+                    if (CheckSubString(keyword, ele.get_Parameter(p.Definition).AsValueString()))
                         break;
                 }
                 flag = false;
