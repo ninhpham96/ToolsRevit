@@ -149,101 +149,210 @@ namespace QuickSelect.ViewModel
                     List<Parameter> para = new List<Parameter>();
                     foreach (var ele in tempParent)
                     {
+                        if (CheckSubString(keyword, ele.Category.Name))
+                        {
+                            foreach (Parameter item in ele.Parameters)
+                            {
+                                para.Add(item);
+                            }
+                            break;
+                        }
                         foreach (Parameter item in ele.Parameters)
                         {
                             if (item.Definition == null) continue;
-                            //if (item.StorageType == StorageType.ElementId)
+                            if (CheckSubString(keyword, item.Definition.Name))
+                            {
+                                para.Add(item);
+                                continue;
+                            }
+                            if (item.StorageType == StorageType.ElementId)
+                            {
+                                if (item.AsElementId() == null || item.AsElementId().ToString() == "-1")
+                                {
+                                    if (CheckSubString(keyword, "<null>"))
+                                        para.Add(item);
+                                }
+                                else
+                                {
+                                    if (CheckSubString(keyword, item.AsElementId().ToString()))
+                                        para.Add(item);
+                                }
+                            }
+                            else if (item.StorageType == StorageType.String)
+                            {
+                                if (item.AsValueString() == null)
+                                {
+                                    if (CheckSubString(keyword, "<null>"))
+                                        para.Add(item);
+                                }
+                                else
+                                {
+                                    if (CheckSubString(keyword, item.AsValueString()))
+                                        para.Add(item);
+                                }
+                            }
+                            else if (item.StorageType == StorageType.Double)
+                            {
+                                if (CheckSubString(keyword, item.AsDouble().ToString()))
+                                    para.Add(item);
+                            }
+                            else if (item.StorageType == StorageType.Integer)
+                            {
+                                if (item.AsElementId() == null) continue;
+                                if (CheckSubString(keyword, item.AsInteger().ToString()))
+                                    para.Add(item);
+                            }
+                            else if (item.StorageType == StorageType.None)
+                            {
+                                if (CheckSubString(keyword, item.AsInteger().ToString()))
+                                    para.Add(item);
+                            }
+                            //if (item.AsValueString() == null)
                             //{
-                            //    if (item.AsElementId() == null)
-                            //    {
-                            //        if (CheckSubString(keyword, ""))
-                            //            para.Add(item);
-                            //    }
-                            //    else
-                            //    {
-                            //        if (CheckSubString(keyword, item.AsElementId().ToString()))
-                            //            para.Add(item);
-                            //    }
-                                
+                            //    if (CheckSubString(keyword, ""))
+                            //        para.Add(item);
                             //}
-                            //else if (item.StorageType == StorageType.String)
+                            //else
                             //{
-                            //    if (item.AsValueString() == null)
-                            //    {
-                            //        if (CheckSubString(keyword, ""))
-                            //            para.Add(item);
-                            //    }
-                            //    else
-                            //    {
                             //    if (CheckSubString(keyword, item.AsValueString()))
                             //        para.Add(item);
-                            //    }
                             //}
-                            //else if (item.StorageType == StorageType.Double)
-                            //{
-                            //    if (CheckSubString(keyword, item.AsDouble().ToString()))
-                            //        para.Add(item);
-                            //}
-                            //else if (item.StorageType == StorageType.Integer)
-                            //{
-                            //    if (item.AsElementId() == null) continue;
-                            //    if (CheckSubString(keyword, item.AsInteger().ToString()))
-                            //        para.Add(item);
-                            //}
-                            //else if (item.StorageType == StorageType.None)
-                            //{
-                            //    if (CheckSubString(keyword, item.AsInteger().ToString()))
-                            //        para.Add(item);
-                            //}
-                            if (item.AsValueString() == null)
-                            {
-                                if (CheckSubString(keyword, ""))
-                                    para.Add(item);
-                            }
-                            else
-                            {
-                                if (CheckSubString(keyword, item.AsValueString()))
-                                    para.Add(item);
-                            }
                         }
                     }
                     para.Sort(new ParaComparer());
-                    if (keyword != string.Empty)
+                    //if (keyword != string.Empty)
+                    //{
+                    foreach (Parameter item in para)
                     {
-                        foreach (Parameter item in para)
-                        {
-                            Children.Add(new QuickSelectData(item, keyword, this));
-                        }
+                        Children.Add(new QuickSelectData(item, keyword, this));
                     }
-                    else
-                    {
-                        for (int i = 0; i < para.Count; i++)
-                        {
-                            if (i % 2 == 0)
-                            {
-                                Children.Add(new QuickSelectData(para[i], keyword, this));
-                            }
-                            else continue;
-                        }
-                    }
+                    //}
+                    //else
+                    //{
+                    //    for (int i = 0; i < para.Count; i++)
+                    //    {
+                    //        if (i % 2 == 0)
+                    //        {
+                    //            Children.Add(new QuickSelectData(para[i], keyword, this));
+                    //        }
+                    //        else continue;
+                    //    }
+                    //}
                 }
                 else if (Type == EnumType.Parameter)
                 {
                     List<string> temp = new List<string>();
                     Parameter par = Current as Parameter;
                     List<Element>? elements = Parent?.Current as List<Element>;
-                    foreach (Element? ele in elements)
+                    bool check = true;
+                    if (CheckSubString(keyword, elements.First().Category.Name) && keyword != string.Empty)
                     {
-                        if (ele.get_Parameter(par.Definition).AsValueString() == null)
-                            temp.Add(string.Empty);
-                        else temp.Add(ele.LookupParameter(Name).AsValueString());
+                        check = true;
+                        foreach (Element ele in elements)
+                        {
+                            var storageType = par.StorageType;
+                            if (storageType == StorageType.ElementId)
+                            {
+                                if (ele.get_Parameter(par.Definition).AsElementId() == null)
+                                    temp.Add("<null>");
+                                else if (ele.get_Parameter(par.Definition).AsElementId().ToString() == "-1")
+                                    temp.Add("<null>");
+                                else
+                                    temp.Add(ele.get_Parameter(par.Definition).AsElementId().ToString());
+                            }
+                            else if ((storageType == StorageType.String))
+                            {
+                                if (ele.get_Parameter(par.Definition).AsValueString() == null)
+                                    temp.Add("<null>");
+                                else
+                                    temp.Add(ele.get_Parameter(par.Definition).AsValueString());
+                            }
+                            else if ((storageType == StorageType.Double))
+                            {
+                                if (ele.get_Parameter(par.Definition).AsDouble() == null)
+                                    temp.Add("<null>");
+                                else
+                                    temp.Add(ele.get_Parameter(par.Definition).AsDouble().ToString());
+                            }
+                            else if ((storageType == StorageType.Integer))
+                            {
+                                if (ele.get_Parameter(par.Definition).AsInteger() == null)
+                                    temp.Add("<null>");
+                                else
+                                    temp.Add(ele.get_Parameter(par.Definition).AsInteger().ToString());
+                            }
+                            else if ((storageType == StorageType.None))
+                            {
+                                if (ele.get_Parameter(par.Definition).AsInteger() == null)
+                                    temp.Add("<None>");
+                                else
+                                    temp.Add(ele.get_Parameter(par.Definition).AsInteger().ToString());
+                            }
+                        }
                     }
-                    temp.Sort();
-                    HashSet<string> values = new HashSet<string>(temp);
-                    foreach (var v in values)
+                    else
                     {
-                        if (CheckSubString(keyword, v))
+                        check = false;
+                        foreach (Element? ele in elements)
+                        {
+                            var storageType = par.StorageType;
+                            if (storageType == StorageType.ElementId)
+                            {
+                                if (ele.get_Parameter(par.Definition).AsElementId() == null)
+                                    temp.Add("<null>");
+                                else if (ele.get_Parameter(par.Definition).AsElementId().ToString() == "-1")
+                                    temp.Add("<null>");
+                                else
+                                    temp.Add(ele.get_Parameter(par.Definition).AsElementId().ToString());
+                            }
+                            else if ((storageType == StorageType.String))
+                            {
+                                if (ele.get_Parameter(par.Definition).AsValueString() == null)
+                                    temp.Add("<null>");
+                                else
+                                    temp.Add(ele.get_Parameter(par.Definition).AsValueString());
+                            }
+                            else if ((storageType == StorageType.Double))
+                            {
+                                if (ele.get_Parameter(par.Definition).AsDouble() == null)
+                                    temp.Add("<null>");
+                                else
+                                    temp.Add(ele.get_Parameter(par.Definition).AsDouble().ToString());
+                            }
+                            else if ((storageType == StorageType.Integer))
+                            {
+                                if (ele.get_Parameter(par.Definition).AsInteger() == null)
+                                    temp.Add("<null>");
+                                else
+                                    temp.Add(ele.get_Parameter(par.Definition).AsInteger().ToString());
+                            }
+                            else if ((storageType == StorageType.None))
+                            {
+                                if (ele.get_Parameter(par.Definition).AsInteger() == null)
+                                    temp.Add("<None>");
+                                else
+                                    temp.Add(ele.get_Parameter(par.Definition).AsInteger().ToString());
+                            }
+                        }
+                    }
+                    if (check)
+                    {
+                        temp.Sort();
+                        HashSet<string> values = new HashSet<string>(temp);
+                        foreach (var v in values)
+                        {
                             Children.Add(new QuickSelectData(v, keyword, this));
+                        }
+                    }
+                    else if (!check)
+                    {
+                        temp.Sort();
+                        HashSet<string> values = new HashSet<string>(temp);
+                        foreach (var v in values)
+                        {
+                            if (CheckSubString(keyword, v))
+                                Children.Add(new QuickSelectData(v, keyword, this));
+                        }
                     }
                 }
                 foreach (var child in Children)
