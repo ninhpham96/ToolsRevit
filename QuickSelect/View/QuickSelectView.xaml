@@ -16,8 +16,8 @@
             <Setter Property="Height" Value="Auto" />
             <Setter Property="MinHeight" Value="23" />
             <Setter Property="Margin" Value="3" />
-            <Setter Property="TextWrapping" Value="Wrap" />
-            <Setter Property="AcceptsReturn" Value="True" />
+            <Setter Property="TextWrapping" Value="NoWrap" />
+            <!--<Setter Property="AcceptsReturn" Value="True" />-->
             <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
     </Window.Resources>

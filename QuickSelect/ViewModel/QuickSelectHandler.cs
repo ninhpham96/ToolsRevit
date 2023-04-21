@@ -21,8 +21,10 @@ namespace QuickSelect.ViewModel
         private static Autodesk.Revit.ApplicationServices.Application? _app;
         private static UIDocument? _uidoc;
         private QuickSelectViewModel? quickSelectVM = null;
+
         public QuickSelectViewModel? QuickSelectVM
         { get { return quickSelectVM; } set { quickSelectVM = value; } }
+
         public CommunicatorRequest Request { get; set; } = new CommunicatorRequest();
 
         #endregion Field
@@ -41,14 +43,14 @@ namespace QuickSelect.ViewModel
                     {
                         return;
                     }
-                    case RequestId.OK:
+                    case RequestId.Select:
                     {
-                        Selected();
+                        SelectElement();
                         break;
                     }
-                    case RequestId.ZoomIn:
+                    case RequestId.Show:
                     {
-                        ZoomIn();
+                        ShowElement();
                         break;
                     }
                 }
@@ -61,7 +63,7 @@ namespace QuickSelect.ViewModel
 
         #region External event
 
-        private void ZoomIn()
+        private void ShowElement()
         {
             if (quickSelectVM.SelectElements?.Count > 0)
             {
@@ -70,7 +72,7 @@ namespace QuickSelect.ViewModel
             }
         }
 
-        private void Selected()
+        private void SelectElement()
         {
             if (quickSelectVM.SelectElements?.Count > 0)
             {
@@ -87,11 +89,11 @@ namespace QuickSelect.ViewModel
 
         public class CommunicatorRequest
         {
-            private int _request = (int)RequestId.OK;
+            private int _request = (int)RequestId.Select;
 
             public RequestId Take()
             {
-                return (RequestId)Interlocked.Exchange(ref _request, (int)RequestId.OK);
+                return (RequestId)Interlocked.Exchange(ref _request, (int)RequestId.Select);
             }
 
             public void Make(RequestId request)
@@ -102,9 +104,9 @@ namespace QuickSelect.ViewModel
 
         public enum RequestId
         {
-            OK,
+            Select,
             Cancel,
-            ZoomIn
+            Show
         }
     }
 }

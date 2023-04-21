@@ -20,6 +20,7 @@ using Autodesk.Revit.UI.Selection;
 using System.Xml.Linq;
 using System.Windows.Markup;
 using System.Data.SqlTypes;
+using System.Windows.Data;
 
 namespace QuickSelect.ViewModel
 {
@@ -42,7 +43,7 @@ namespace QuickSelect.ViewModel
         private bool isOpen = false;
 
         [ObservableProperty]
-        private string? search= string.Empty;
+        private string? search = string.Empty;
 
         public static QuickSelectViewModel? Instance { get; set; }
         public ObservableCollection<QuickSelectData>? Items { get; set; }
@@ -52,6 +53,7 @@ namespace QuickSelect.ViewModel
         //private Stack<Element>? stackOne = new Stack<Element>();
         //private Stack<Element>? stackTwo = new Stack<Element>();
         //private Stack<Element>? stackTemp = new Stack<Element>();
+
         #endregion properties and field
 
         #region constructor
@@ -68,9 +70,9 @@ namespace QuickSelect.ViewModel
             {
                 IEnumerable<IGrouping<string?, Element>> children = Data.Instance.GetAllElementsInView(doc)
                     .Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
-                var items = new ObservableCollection<QuickSelectData>(children.Select(c => new QuickSelectData(c,Search, null)));
+                var items = new ObservableCollection<QuickSelectData>(children.Select(c => new QuickSelectData(c, Search, null)));
 
-                Items = new ObservableCollection<QuickSelectData>(items.OrderBy(x=>x.Name));
+                Items = new ObservableCollection<QuickSelectData>(items.OrderBy(x => x.Name));
 
                 Items.First().SelectElements = SelectElements;
             }
@@ -83,7 +85,6 @@ namespace QuickSelect.ViewModel
                 Items = new ObservableCollection<QuickSelectData>(items.OrderBy(x => x.Name));
 
                 Items.First().SelectElements = SelectElements;
-
             }
             else if (optionType == OptionType.Selected)
             {
@@ -113,6 +114,7 @@ namespace QuickSelect.ViewModel
         }
 
         #endregion constructor
+
         #region Command
 
         [RelayCommand]
@@ -261,7 +263,7 @@ namespace QuickSelect.ViewModel
             try
             {
                 handler.QuickSelectVM = Instance;
-                AppCommand.Handler.Request.Make(QuickSelectHandler.RequestId.OK);
+                AppCommand.Handler.Request.Make(QuickSelectHandler.RequestId.Select);
                 AppCommand.ExEvent.Raise();
                 RevitUtils.SetFocusToRevit();
             }
@@ -277,7 +279,7 @@ namespace QuickSelect.ViewModel
             try
             {
                 handler.QuickSelectVM = Instance;
-                AppCommand.Handler.Request.Make(QuickSelectHandler.RequestId.ZoomIn);
+                AppCommand.Handler.Request.Make(QuickSelectHandler.RequestId.Show);
                 AppCommand.ExEvent.Raise();
                 RevitUtils.SetFocusToRevit();
             }
@@ -302,22 +304,34 @@ namespace QuickSelect.ViewModel
         [RelayCommand]
         private void Searching()
         {
-            List<Element> temp = new();
-            var tempSearch = Search.Trim();
-            if (Search == string.Empty) return;
-            foreach (Element ele in ListElement)
+            List<Element> temp = new List<Element>();
+            var keySearch = string.Empty;
+            if (string.IsNullOrWhiteSpace(Search))
             {
-                if (CheckElementOfList(tempSearch, ele))
-                    temp.Add(ele);
+                if (ListElement?.Count > 0)
+                {
+                    temp.AddRange(ListElement);
+                }
             }
+            else
+            {
+                keySearch = Search.Trim();
+                foreach (Element ele in ListElement)
+                {
+                    if (CheckElementOfList(keySearch, ele))
+                        temp.Add(ele);
+                }
+            }
+
             IEnumerable<IGrouping<string?, Element>> children = temp
                         .Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
             Items.Clear();
             foreach (IGrouping<string?, Element> item in children)
             {
-                Items.Add(new QuickSelectData(item,Search, null));
+                Items.Add(new QuickSelectData(item, keySearch, null));
             }
         }
+
         [RelayCommand]
         private void Clear()
         {
@@ -331,108 +345,57 @@ namespace QuickSelect.ViewModel
                 Items.Add(new QuickSelectData(item, Search, null));
             }
         }
+
         [RelayCommand]
         private void TextChanged(string keyword)
         {
             if (keyword == string.Empty) Clear();
         }
+
         #endregion Command
 
         #region methods
+
         private bool CheckElementOfList(string keyword, Element ele)
         {
-            bool flag = true;
             if (CheckSubString(keyword, ele.Name))
                 return true;
             if (CheckSubString(keyword, ele.Category.Name))
                 return true;
-            ParameterSet paras = ele.Parameters;
-            foreach (Parameter p in paras)
-            {
-                flag = true;
-                if (ele.get_Parameter(p.Definition) == null) continue;
-                if(p.Definition == null) continue;
-                if (CheckSubString(keyword, p.Definition.Name)) break;
 
-                Parameter para = ele.get_Parameter(p.Definition);
+            ParameterSet paras = ele.Parameters;
+            foreach (Parameter para in paras)
+            {
                 if (para == null) continue;
-                if (para.StorageType == StorageType.ElementId)
+                if (para.Definition == null) continue;
+                if (CheckSubString(keyword, para.Definition.Name)) return true;
+
+                string value = string.Empty;
+                if (para.StorageType == StorageType.String)
                 {
-                    if (para.AsElementId() == null|| para.AsElementId().ToString() == "-1")
-                    {
-                        if (CheckSubString(keyword, "<null>"))
-                            break;
-                    }
-                    else
-                    {
-                        if (CheckSubString(keyword, para.AsElementId().ToString()))
-                            break;
-                    }
+                    value = para.AsString();
                 }
-                else if (para.StorageType == StorageType.String)
+                else
                 {
-                    if (para.AsString() == null)
-                    {
-                        if (CheckSubString(keyword, "<null>"))
-                            break;
-                    }
-                    else
-                    {
-                        if (CheckSubString(keyword, para.AsString()))
-                            break;
-                    }
+                    value = para.AsValueString();
                 }
-                else if (para.StorageType == StorageType.Double)
+
+                if (string.IsNullOrEmpty(value))
                 {
-                    if (para.AsDouble() == null)
-                    {
-                        if (CheckSubString(keyword, "<null>"))
-                            break;
-                    }
-                    else
-                    {
-                        if (CheckSubString(keyword, para.AsDouble().ToString()))
-                            break;
-                    }
+                    continue;
                 }
-                else if (para.StorageType == StorageType.Integer)
-                {
-                    if (para.AsInteger() == null)
-                    {
-                        if (CheckSubString(keyword, "<null>"))
-                            break;
-                    }
-                    else
-                    {
-                        if (CheckSubString(keyword, para.AsInteger().ToString()))
-                            break;
-                    }
-                }
-                else if (para.StorageType == StorageType.None)
-                {
-                    if (para.AsInteger() == null)
-                    {
-                        if (CheckSubString(keyword, ""))
-                            break;
-                    }
-                    else
-                    {
-                        if (CheckSubString(keyword, para.AsInteger().ToString()))
-                            break;
-                    }
-                }
-                flag = false;
+
+                if (CheckSubString(keyword, value))
+                    return true;
             }
-            if (flag)
-                return true;
-            else return false;
+
+            return false;
         }
 
         private bool CheckSubString(string keyword, string target)
         {
             int isSubstring = target.IndexOf(keyword, StringComparison.OrdinalIgnoreCase);
-            if (isSubstring == -1) return false;
-            else return true;
+            return isSubstring != -1;
         }
 
         private void SetCheckForChildren(QuickSelectData data)
@@ -470,33 +433,8 @@ namespace QuickSelect.ViewModel
             else if (check.Count == 1)
                 data.Parent.IsChecked = check.FirstOrDefault();
             SetCheckForParent(data.Parent);
-            #region
-            //if (data.Parent != null)
-            //{
-            //    foreach (QuickSelectData child in data.Parent.Children)
-            //    {
-            //        if (child.IsChecked == null)
-            //        {
-            //            data.Parent.IsChecked = null;
-            //            //continue;
-            //        }
-            //        else
-            //        {
-            //            check.Add((bool)child.IsChecked);
-            //            if (check.Count > 1)
-            //            {
-            //                data.Parent.IsChecked = null;
-            //                //SetCheckForParent(data.Parent);
-            //                //return;
-            //            }
-            //        }
-            //    }
-            //    //data.Parent.IsChecked = check.First();
-            //}
-            //SetCheckForParent(data.Parent);
-            #endregion methods
         }
 
-        #endregion
+        #endregion methods
     }
 }

@@ -61,7 +61,6 @@ namespace QuickSelect
             PushButton pushButton = panel.AddItem(buttonData) as PushButton;
             pushButton.ToolTip = "パラメータで要素を選択";
             pushButton.LargeImage = RibbonUtils.ConvertFromBitmap(Properties.Resources.QuickSelect);
-            pushButton.Image = RibbonUtils.ConvertFromBitmap(Properties.Resources.subscript_16);
         }
 
         #endregion methods
