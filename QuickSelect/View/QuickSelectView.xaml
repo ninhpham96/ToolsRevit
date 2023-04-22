@@ -5,12 +5,18 @@
         xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         x:Name="Win" mc:Ignorable="d" WindowStartupLocation="CenterScreen" SizeToContent="Manual" Title="クイック選択"
-        Height="600" Width="400" MinHeight="300" MinWidth="300" Closed="Win_Closed">
+        Height="600" Width="400" MinHeight="300" MinWidth="400" Closed="Win_Closed">
     <Window.Resources>
         <Style TargetType="Button">
             <Setter Property="Margin" Value="5" />
             <Setter Property="Height" Value="23" />
             <Setter Property="Width" Value="75" />
+        </Style>
+        <Style TargetType="RadioButton">
+            <Setter Property="Margin" Value="3" />
+            <Setter Property="Height" Value="23" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
         <Style TargetType="TextBox">
             <Setter Property="Height" Value="Auto" />
@@ -35,6 +41,7 @@
     <Grid Margin="5 2 5 0">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition />
             <RowDefinition Height="40" />
         </Grid.RowDefinitions>
@@ -56,8 +63,21 @@
             <Button Grid.Column="1" Name="btnSearch" Command="{Binding SearchingCommand}" Content="検索" />
             <Button Grid.Column="2" Name="btnClear" Command="{Binding ClearCommand}" Content="リセット" />
         </Grid>
-        <GroupBox VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Row="1" Header="カテゴリ" BorderThickness="1">
-            <TreeView BorderThickness="0" x:Name="FolderView" ItemsSource="{Binding Items}">
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <RadioButton Content="プロジェクト全体"
+                             IsChecked="{Binding IsAllProject, UpdateSourceTrigger=PropertyChanged}" />
+            <RadioButton Grid.Column="1" Content="カレントービュー"
+                             IsChecked="{Binding IsActiveView, UpdateSourceTrigger=PropertyChanged}" />
+            <RadioButton Grid.Column="2" Content="選択したオブジェクト"
+                         IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" />
+        </Grid>
+        <GroupBox VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Row="2" Header="カテゴリ" BorderThickness="1">
+            <TreeView BorderThickness="0" x:Name="FolderView" ItemsSource="{Binding Items, UpdateSourceTrigger=PropertyChanged}">
                 <TreeView.ItemContainerStyle>
                     <Style TargetType="{x:Type TreeViewItem}">
                         <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
@@ -75,8 +95,8 @@
                 </TreeView.ItemTemplate>
             </TreeView>
         </GroupBox>
-        <WrapPanel Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Right">
-            <Button Command="{Binding ClickOkCommand}" Content="選択の適用" />
+        <WrapPanel Grid.Row="3" VerticalAlignment="Center" HorizontalAlignment="Right">
+            <Button Command="{Binding ClickOkCommand}" Content="ハイライト" />
             <Button Command="{Binding ClickZoomInCommand}" Content="表示" />
             <Button Content="キャンセル" IsCancel="True" Click="Button_Click" />
         </WrapPanel>

@@ -5,7 +5,6 @@ using QuickSelect.Utilities;
 using QuickSelect.View;
 using QuickSelect.ViewModel;
 using System;
-using System.Collections.Generic;
 
 namespace QuickSelect
 {
@@ -31,38 +30,12 @@ namespace QuickSelect
         {
             try
             {
-                ICollection<ElementId> selectedID = uidoc.Selection.GetElementIds();
-
-                TaskDialog taskDialog = new TaskDialog("適用範囲");
-                taskDialog.AddCommandLink(TaskDialogCommandLinkId.CommandLink1, "カレントービュー");
-                taskDialog.AddCommandLink(TaskDialogCommandLinkId.CommandLink2, "プロジェクト全体");
-                if (selectedID?.Count > 0)
-                {
-                    taskDialog.AddCommandLink(TaskDialogCommandLinkId.CommandLink3, "選択したオブジェクト");
-                }
-                var result = taskDialog.Show();
-                if (result == TaskDialogResult.CommandLink1)
-                {
-                    new QuickSelectView(new QuickSelectViewModel(uiapp, AppCommand.Handler, OptionType.ActiveView));
-                }
-                else if (result == TaskDialogResult.CommandLink2)
-                {
-                    new QuickSelectView(new QuickSelectViewModel(uiapp, AppCommand.Handler, OptionType.AllProject));
-                }
-                else if (result == TaskDialogResult.CommandLink3)
-                {
-                    new QuickSelectView(new QuickSelectViewModel(uiapp, AppCommand.Handler, OptionType.Selected));
-                }
-                else
-                {
-                    AppCommand.IsShow = false;
-                }
-
+                new QuickSelectView(new QuickSelectViewModel(uiapp, AppCommand.Handler));
                 return Result.Succeeded;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                RevitUtils.ShowException(ex);
+                RevitUtils.ShowWarning("データが見つかりません。 プロジェクトを確認し、データをリセットし、操作を再試行してください。");
                 return Result.Failed;
             }
         }

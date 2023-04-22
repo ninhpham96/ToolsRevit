@@ -16,7 +16,6 @@ namespace QuickSelect.ViewModel
     {
         #region Field
 
-        private static Document? _doc;
         private static UIApplication? _uiapp;
         private static Autodesk.Revit.ApplicationServices.Application? _app;
         private static UIDocument? _uidoc;
@@ -34,7 +33,6 @@ namespace QuickSelect.ViewModel
             _uiapp = uiapp;
             _uidoc = uiapp.ActiveUIDocument;
             _app = uiapp.Application;
-            _doc = uiapp.ActiveUIDocument.Document;
             try
             {
                 switch (Request.Take())
@@ -55,10 +53,7 @@ namespace QuickSelect.ViewModel
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                RevitUtils.ShowException(ex);
-            }
+            catch (Exception) { RevitUtils.ShowWarning("データが見つかりません。 プロジェクトを確認し、データをリセットし、操作を再試行してください。"); }
         }
 
         #region External event
@@ -70,6 +65,10 @@ namespace QuickSelect.ViewModel
                 _uidoc.Selection.SetElementIds(quickSelectVM.SelectElements);
                 _uidoc.ShowElements(quickSelectVM.SelectElements);
             }
+            else
+            {
+                _uidoc.Selection.SetElementIds(new List<ElementId>());
+            }
         }
 
         private void SelectElement()
@@ -77,6 +76,10 @@ namespace QuickSelect.ViewModel
             if (quickSelectVM.SelectElements?.Count > 0)
             {
                 _uidoc.Selection.SetElementIds(quickSelectVM.SelectElements);
+            }
+            else
+            {
+                _uidoc.Selection.SetElementIds(new List<ElementId>());
             }
         }
 

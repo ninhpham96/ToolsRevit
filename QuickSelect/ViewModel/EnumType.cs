@@ -14,6 +14,7 @@ namespace QuickSelect.ViewModel
         Parameter,
         Value
     }
+
     public enum OptionType
     {
         ActiveView,

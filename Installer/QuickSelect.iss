@@ -40,6 +40,7 @@ Name: "Revit2020"; Description: "Add-in Revit 2020"; Types: full
 Name: "Revit2021"; Description: "Add-in Revit 2021"; Types: full
 Name: "Revit2022"; Description: "Add-in Revit 2022"; Types: full
 Name: "Revit2023"; Description: "Add-in Revit 2023"; Types: full
+Name: "Revit2024"; Description: "Add-in Revit 2024"; Types: full
 ; Name: "Resources"; Description: "Resources"; Types: full; Flags: fixed
 
 [Messages]
@@ -137,5 +138,6 @@ Source: "Output\*"; DestDir: "C:\ProgramData\Autodesk\Revit\Addins\2020"; Compon
 Source: "Output\*"; DestDir: "C:\ProgramData\Autodesk\Revit\Addins\2021"; Components: Revit2021; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "Output\*"; DestDir: "C:\ProgramData\Autodesk\Revit\Addins\2022"; Components: Revit2022; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "Output\*"; DestDir: "C:\ProgramData\Autodesk\Revit\Addins\2023"; Components: Revit2023; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "Output\*"; DestDir: "C:\ProgramData\Autodesk\Revit\Addins\2024"; Components: Revit2024; Flags: ignoreversion recursesubdirs createallsubdirs
 
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files

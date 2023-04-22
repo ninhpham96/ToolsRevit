@@ -31,10 +31,8 @@ namespace QuickSelect.ViewModel
         [ObservableProperty]
         private UIApplication? uiApp = null;
 
-        private Document? doc = null;
         private QuickSelectHandler handler;
         private string oldkeyword = string.Empty;
-        private OptionType optionType;
 
         [ObservableProperty]
         private ICollection<ElementId>? selectElements = new List<ElementId>();
@@ -48,47 +46,99 @@ namespace QuickSelect.ViewModel
         public static QuickSelectViewModel? Instance { get; set; }
         public ObservableCollection<QuickSelectData>? Items { get; set; }
         private List<Element>? ListElement = new List<Element>();
-        //ICollection<Element>? oldItems;
-        //HashSet<Element>? newItems;
-        //private Stack<Element>? stackOne = new Stack<Element>();
-        //private Stack<Element>? stackTwo = new Stack<Element>();
-        //private Stack<Element>? stackTemp = new Stack<Element>();
 
-        #endregion properties and field
+        public OptionType Scope { get; set; }
 
-        #region constructor
+        private bool _isSelected;
 
-        public QuickSelectViewModel(UIApplication uiapp, QuickSelectHandler handler, OptionType option)
+        public bool IsSelected
         {
-            Instance = this;
-            UiApp = uiapp;
-            doc = uiapp.ActiveUIDocument.Document;
-            this.handler = handler;
-            optionType = option;
+            get => _isSelected;
+            set
+            {
+                SetProperty(ref _isSelected, value, nameof(IsSelected));
+                if (value)
+                {
+                    Scope = OptionType.Selected;
+                    InitItems();
+                }
+            }
+        }
 
-            if (optionType == OptionType.ActiveView)
+        private bool _isActiveView;
+
+        public bool IsActiveView
+        {
+            get => _isActiveView;
+            set
+            {
+                SetProperty(ref _isActiveView, value, nameof(IsActiveView));
+                if (value)
+                {
+                    Scope = OptionType.ActiveView;
+                    InitItems();
+                }
+            }
+        }
+
+        private bool _isAllProject;
+
+        public bool IsAllProject
+        {
+            get => _isAllProject;
+            set
+            {
+                SetProperty(ref _isAllProject, value, nameof(IsAllProject));
+                if (value)
+                {
+                    Scope = OptionType.AllProject;
+                    InitItems();
+                }
+            }
+        }
+
+        public void InitItems()
+        {
+            ListElement.Clear();
+            SelectElements.Clear();
+            if (Items != null)
+            {
+                Items.Clear();
+            }
+            else
+            {
+                Items = new ObservableCollection<QuickSelectData>();
+            }
+            if (uiApp.ActiveUIDocument == null)
+            {
+                return;
+            }
+            Document doc = uiApp.ActiveUIDocument?.Document;
+            if (Scope == OptionType.ActiveView)
             {
                 IEnumerable<IGrouping<string?, Element>> children = Data.Instance.GetAllElementsInView(doc)
                     .Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
                 var items = new ObservableCollection<QuickSelectData>(children.Select(c => new QuickSelectData(c, Search, null)));
 
-                Items = new ObservableCollection<QuickSelectData>(items.OrderBy(x => x.Name));
-
-                Items.First().SelectElements = SelectElements;
+                foreach (var item in items.OrderBy(x => x.Name))
+                {
+                    Items.Add(item);
+                }
             }
-            else if (optionType == OptionType.AllProject)
+            else if (Scope == OptionType.AllProject)
             {
                 IEnumerable<IGrouping<string?, Element>> children = Data.Instance.GetAllElementsInProject(doc)
                     .Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
                 var items = new ObservableCollection<QuickSelectData>(children.Select(c => new QuickSelectData(c, Search, null)));
 
-                Items = new ObservableCollection<QuickSelectData>(items.OrderBy(x => x.Name));
-
-                Items.First().SelectElements = SelectElements;
+                foreach (var item in items.OrderBy(x => x.Name))
+                {
+                    Items.Add(item);
+                }
             }
-            else if (optionType == OptionType.Selected)
+            else
             {
-                ICollection<ElementId> selectedID = uiapp.ActiveUIDocument.Selection.GetElementIds();
+                ICollection<ElementId> selectedID = uiApp.ActiveUIDocument.Selection.GetElementIds();
                 List<Element> selected = new();
                 foreach (ElementId id in selectedID)
                 {
@@ -97,20 +147,35 @@ namespace QuickSelect.ViewModel
                 IEnumerable<IGrouping<string?, Element>> children = selected.Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
                 var items = new ObservableCollection<QuickSelectData>(children.Select(c => new QuickSelectData(c, Search, null)));
 
-                Items = new ObservableCollection<QuickSelectData>(items.OrderBy(x => x.Name));
-
-                Items.First().SelectElements = SelectElements;
-            }
-
-            foreach (QuickSelectData item in Items)
-            {
-                foreach (Element ite in item.Current as IGrouping<string, Element>)
+                foreach (var item in items.OrderBy(x => x.Name))
                 {
-                    //oldItems.Add(ite);
-                    //stackTemp.Push(ite);
-                    ListElement.Add(ite);
+                    Items.Add(item);
                 }
             }
+
+            if (Items?.Count > 0)
+            {
+                Items.First().SelectElements = SelectElements;
+                foreach (QuickSelectData item in Items)
+                {
+                    foreach (Element ite in item.Current as IGrouping<string, Element>)
+                    {
+                        ListElement.Add(ite);
+                    }
+                }
+            }
+        }
+
+        #endregion properties and field
+
+        #region constructor
+
+        public QuickSelectViewModel(UIApplication uiapp, QuickSelectHandler handler)
+        {
+            Instance = this;
+            UiApp = uiapp;
+            this.handler = handler;
+            IsActiveView = true;
         }
 
         #endregion constructor
@@ -171,19 +236,23 @@ namespace QuickSelect.ViewModel
                 else if (data.Type == EnumType.Parameter)
                 {
                     List<Element> elements = (data.Parent.Current) as List<Element>;
+                    elements?.ForEach(p => {
+                        if (SelectElements.Contains(p.Id))
+                            SelectElements?.Remove(p.Id);
+                    });
+                    SetCheckForChildren(data);
+                    SetCheckForParent(data);
+
                     if (data.IsChecked == true)
+                    {
                         elements?.ForEach(p => {
                             if (!SelectElements.Contains(p.Id))
                             {
                                 SelectElements?.Add(p.Id);
                             }
                         });
-                    else elements?.ForEach(p => {
-                        if (SelectElements.Contains(p.Id))
-                            SelectElements?.Remove(p.Id);
-                    });
-                    SetCheckForChildren(data);
-                    SetCheckForParent(data);
+                        return;
+                    }
                     foreach (QuickSelectData item in data.Parent.Children)
                     {
                         if (item.Name == data.Name) continue;
@@ -203,26 +272,15 @@ namespace QuickSelect.ViewModel
                 else if (data.Type == EnumType.Value)
                 {
                     List<Element> elements = (data.Parent?.Parent?.Current) as List<Element>;
-                    elements.ForEach(e => {
-                        if (e.LookupParameter(data.Parent.Name).AsValueString() == data.Name)
-                        {
-                            if (data.IsChecked == true)
-                            {
-                                if (!SelectElements.Contains(e.Id))
-                                    SelectElements.Add(e.Id);
-                            }
-                            else
-                            {
-                                if (SelectElements.Contains(e.Id))
-                                    SelectElements.Remove(e.Id);
-                            }
-                        }
+                    elements?.ForEach(p => {
+                        if (SelectElements.Contains(p.Id))
+                            SelectElements?.Remove(p.Id);
                     });
                     SetCheckForChildren(data);
                     SetCheckForParent(data);
+
                     foreach (QuickSelectData d in data.Parent.Parent.Children)
                     {
-                        if (d.Name == data.Parent.Name) continue;
                         if (d.IsChecked == false) continue;
                         if (d.IsChecked == true)
                         {
@@ -231,22 +289,39 @@ namespace QuickSelect.ViewModel
                                 if (!SelectElements.Contains(item.Id))
                                     SelectElements.Add(item.Id);
                             }
+                            return;
                         }
-                        if (d.IsChecked == null)
+
+                        foreach (QuickSelectData item in d.Children)
                         {
-                            foreach (QuickSelectData item in d.Children)
+                            if (item.IsChecked != true)
                             {
-                                elements.ForEach(e => {
-                                    if (e.LookupParameter(d.Name).AsValueString() == item.Name)
-                                    {
-                                        if (item.IsChecked == true)
-                                        {
-                                            if (!SelectElements.Contains(e.Id))
-                                                SelectElements.Add(e.Id);
-                                        }
-                                    }
-                                });
+                                continue;
                             }
+                            elements.ForEach(e => {
+                                Parameter para = e.GetParameters(item.Parent.Name).FirstOrDefault();
+                                if (para != null)
+                                {
+                                    string value = string.Empty;
+                                    if (para.StorageType == StorageType.String)
+                                    {
+                                        value = para.AsString();
+                                    }
+                                    else
+                                    {
+                                        value = para.AsValueString();
+                                    }
+                                    if (string.IsNullOrEmpty(value))
+                                    {
+                                        value = "<null>";
+                                    }
+
+                                    if (value == item.Name && !SelectElements.Contains(e.Id))
+                                    {
+                                        SelectElements.Add(e.Id);
+                                    }
+                                }
+                            });
                         }
                     }
                     return;
@@ -254,7 +329,10 @@ namespace QuickSelect.ViewModel
                 SetCheckForChildren(data);
                 SetCheckForParent(data);
             }
-            catch (Exception ex) { RevitUtils.ShowException(ex); }
+            catch (Exception)
+            {
+                RevitUtils.ShowWarning("データが見つかりません。 プロジェクトを確認し、データをリセットし、操作を再試行してください。");
+            }
         }
 
         [RelayCommand]
@@ -267,9 +345,9 @@ namespace QuickSelect.ViewModel
                 AppCommand.ExEvent.Raise();
                 RevitUtils.SetFocusToRevit();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                RevitUtils.ShowException(ex);
+                RevitUtils.ShowWarning("データが見つかりません。 プロジェクトを確認し、データをリセットし、操作を再試行してください。");
             }
         }
 
@@ -283,10 +361,7 @@ namespace QuickSelect.ViewModel
                 AppCommand.ExEvent.Raise();
                 RevitUtils.SetFocusToRevit();
             }
-            catch (Exception ex)
-            {
-                RevitUtils.ShowException(ex);
-            }
+            catch (Exception) { RevitUtils.ShowWarning("データが見つかりません。 プロジェクトを確認し、データをリセットし、操作を再試行してください。"); }
         }
 
         [RelayCommand]
@@ -304,6 +379,12 @@ namespace QuickSelect.ViewModel
         [RelayCommand]
         private void Searching()
         {
+            SelectElements.Clear();
+            Items.Clear();
+            if (uiApp.ActiveUIDocument == null)
+            {
+                return;
+            }
             List<Element> temp = new List<Element>();
             var keySearch = string.Empty;
             if (string.IsNullOrWhiteSpace(Search))
@@ -325,7 +406,6 @@ namespace QuickSelect.ViewModel
 
             IEnumerable<IGrouping<string?, Element>> children = temp
                         .Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
-            Items.Clear();
             foreach (IGrouping<string?, Element> item in children)
             {
                 Items.Add(new QuickSelectData(item, keySearch, null));
@@ -336,14 +416,7 @@ namespace QuickSelect.ViewModel
         private void Clear()
         {
             Search = string.Empty;
-            SelectElements.Clear();
-            IEnumerable<IGrouping<string?, Element>> children = ListElement
-                        .Where(e => e.Category != null).GroupBy(e => e.Category != null ? e.Category.Name : null);
-            Items.Clear();
-            foreach (IGrouping<string?, Element> item in children)
-            {
-                Items.Add(new QuickSelectData(item, Search, null));
-            }
+            InitItems();
         }
 
         [RelayCommand]
@@ -358,36 +431,40 @@ namespace QuickSelect.ViewModel
 
         private bool CheckElementOfList(string keyword, Element ele)
         {
-            if (CheckSubString(keyword, ele.Name))
-                return true;
-            if (CheckSubString(keyword, ele.Category.Name))
-                return true;
-
-            ParameterSet paras = ele.Parameters;
-            foreach (Parameter para in paras)
+            try
             {
-                if (para == null) continue;
-                if (para.Definition == null) continue;
-                if (CheckSubString(keyword, para.Definition.Name)) return true;
-
-                string value = string.Empty;
-                if (para.StorageType == StorageType.String)
-                {
-                    value = para.AsString();
-                }
-                else
-                {
-                    value = para.AsValueString();
-                }
-
-                if (string.IsNullOrEmpty(value))
-                {
-                    continue;
-                }
-
-                if (CheckSubString(keyword, value))
+                if (CheckSubString(keyword, ele.Name))
                     return true;
+                if (CheckSubString(keyword, ele.Category.Name))
+                    return true;
+
+                ParameterSet paras = ele.Parameters;
+                foreach (Parameter para in paras)
+                {
+                    if (para == null) continue;
+                    if (para.Definition == null) continue;
+                    if (CheckSubString(keyword, para.Definition.Name)) return true;
+
+                    string value = string.Empty;
+                    if (para.StorageType == StorageType.String)
+                    {
+                        value = para.AsString();
+                    }
+                    else
+                    {
+                        value = para.AsValueString();
+                    }
+
+                    if (string.IsNullOrEmpty(value))
+                    {
+                        continue;
+                    }
+
+                    if (CheckSubString(keyword, value))
+                        return true;
+                }
             }
+            catch (Exception) { }
 
             return false;
         }
