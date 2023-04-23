@@ -82,17 +82,6 @@ namespace QuickSelect.ViewModel
             ClearChildren();
         }
 
-        public QuickSelectData(List<Element> elements, string keyword, QuickSelectData parent)
-        {
-            SelectElements = new List<ElementId>();
-            Type = EnumType.Element;
-            Current = elements;
-            Parent = parent;
-            Name = elements.FirstOrDefault().Name;
-            this.keyword = keyword;
-            ClearChildren();
-        }
-
         public QuickSelectData(Parameter parameter, string keyword, QuickSelectData parent)
         {
             SelectElements = new List<ElementId>();
@@ -157,66 +146,60 @@ namespace QuickSelect.ViewModel
                 else if (Type == EnumType.Category)
                 {
                     IGrouping<string?, Element> tempParent = (IGrouping<string?, Element>)Current;
-                    var myList = tempParent.GroupBy(e => e.Name);
-                    foreach (IGrouping<string?, Element> item in myList)
-                    {
-                        Children.Add(new QuickSelectData(item.ToList(), keyword, this));
-                    }
-                }
-                else if (Type == EnumType.Element)
-                {
-                    List<Element> tempParent = (List<Element>)Current;
+                    var dataCategory = tempParent.GroupBy(e => e.Name);
                     List<Parameter> para = new List<Parameter>();
                     List<string> paraName = new List<string>();
-                    foreach (var ele in tempParent)
+                    foreach (IGrouping<string?, Element> group in dataCategory)
                     {
-                        if (string.IsNullOrWhiteSpace(keyword) || CheckSubString(keyword, ele.Category.Name))
+                        foreach (var ele in group.ToList())
                         {
+                            if (string.IsNullOrWhiteSpace(keyword) || CheckSubString(keyword, ele.Category.Name))
+                            {
+                                foreach (Parameter item in ele.Parameters)
+                                {
+                                    if (item.Definition != null && !paraName.Any(x => x.Equals(item.Definition.Name)))
+                                    {
+                                        para.Add(item);
+                                        paraName.Add(item.Definition.Name);
+                                    }
+                                }
+                                continue;
+                            }
                             foreach (Parameter item in ele.Parameters)
                             {
-                                if (item.Definition != null && !paraName.Any(x => x.Equals(item.Definition.Name)))
+                                if (item.Definition == null || paraName.Any(x => x.Equals(item.Definition.Name))) continue;
+
+                                if (CheckSubString(keyword, item.Definition.Name))
+                                {
+                                    para.Add(item);
+                                    paraName.Add(item.Definition.Name);
+                                    continue;
+                                }
+
+                                string value = string.Empty;
+                                if (item.StorageType == StorageType.String)
+                                {
+                                    value = item.AsString();
+                                }
+                                else
+                                {
+                                    value = item.AsValueString();
+                                }
+
+                                if (string.IsNullOrWhiteSpace(value))
+                                {
+                                    value = "<null>";
+                                }
+
+                                if (CheckSubString(keyword, value))
                                 {
                                     para.Add(item);
                                     paraName.Add(item.Definition.Name);
                                 }
                             }
-                            break;
-                        }
-                        foreach (Parameter item in ele.Parameters)
-                        {
-                            if (item.Definition == null || paraName.Any(x => x.Equals(item.Definition.Name))) continue;
-
-                            if (CheckSubString(keyword, item.Definition.Name))
-                            {
-                                para.Add(item);
-                                paraName.Add(item.Definition.Name);
-                                continue;
-                            }
-
-                            string value = string.Empty;
-                            if (item.StorageType == StorageType.String)
-                            {
-                                value = item.AsString();
-                            }
-                            else
-                            {
-                                value = item.AsValueString();
-                            }
-
-                            if (string.IsNullOrEmpty(value))
-                            {
-                                continue;
-                            }
-
-                            if (CheckSubString(keyword, value))
-                            {
-                                para.Add(item);
-                                paraName.Add(item.Definition.Name);
-                            }
                         }
                     }
                     para.Sort(new ParaComparer());
-
                     foreach (Parameter item in para)
                     {
                         Children.Add(new QuickSelectData(item, keyword, this));
@@ -226,7 +209,7 @@ namespace QuickSelect.ViewModel
                 {
                     List<string> temp = new List<string>();
                     Parameter par = Current as Parameter;
-                    List<Element>? elements = Parent?.Current as List<Element>;
+                    List<Element>? elements = ((IGrouping<string?, Element>)Parent?.Current).ToList();
                     if (par.Definition == null && elements?.Count > 0)
                     {
                         return;
@@ -249,7 +232,7 @@ namespace QuickSelect.ViewModel
                             value = param.AsValueString();
                         }
 
-                        if (string.IsNullOrEmpty(value))
+                        if (string.IsNullOrWhiteSpace(value))
                         {
                             value = "<null>";
                         }

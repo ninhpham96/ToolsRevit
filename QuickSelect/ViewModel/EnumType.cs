@@ -10,7 +10,6 @@ namespace QuickSelect.ViewModel
     {
         ListFamily,
         Category,
-        Element,
         Parameter,
         Value
     }

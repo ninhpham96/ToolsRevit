@@ -163,6 +163,10 @@ namespace QuickSelect.ViewModel
                         ListElement.Add(ite);
                     }
                 }
+                if (!string.IsNullOrWhiteSpace(Search))
+                {
+                    Searching();
+                }
             }
         }
 
@@ -188,29 +192,32 @@ namespace QuickSelect.ViewModel
             try
             {
                 if (data == null) return;
+                SetCheckForChildren(data);
+                SetCheckForParent(data);
+
                 if (data.Type == EnumType.ListFamily)
                 {
                     List<Element> elements = (List<Element>)data.Current;
                     if (data.IsChecked == true)
-                        elements?.ForEach(p => {
-                            if (!SelectElements.Contains(p.Id))
+                        elements?.ForEach(elem => {
+                            if (!SelectElements.Contains(elem.Id))
                             {
-                                SelectElements?.Add(p.Id);
+                                SelectElements?.Add(elem.Id);
                             }
                         });
-                    else elements?.ForEach(p => {
-                        if (SelectElements.Contains(p.Id))
-                            SelectElements?.Remove(p.Id);
+                    else elements?.ForEach(elem => {
+                        if (SelectElements.Contains(elem.Id))
+                            SelectElements?.Remove(elem.Id);
                     });
                 }
                 else if (data.Type == EnumType.Category)
                 {
                     List<Element> elements = ((IGrouping<string?, Element>)data.Current).ToList();
                     if (data.IsChecked == true)
-                        elements?.ForEach(p => {
-                            if (!SelectElements.Contains(p.Id))
+                        elements?.ForEach(elem => {
+                            if (!SelectElements.Contains(elem.Id))
                             {
-                                SelectElements?.Add(p.Id);
+                                SelectElements?.Add(elem.Id);
                             }
                         });
                     else elements?.ForEach(p => {
@@ -218,81 +225,34 @@ namespace QuickSelect.ViewModel
                             SelectElements?.Remove(p.Id);
                     });
                 }
-                else if (data.Type == EnumType.Element)
+                else if (data.Type == EnumType.Parameter || data.Type == EnumType.Value)
                 {
-                    List<Element> elements = (List<Element>)data.Current;
-                    if (data.IsChecked == true)
-                        elements?.ForEach(p => {
-                            if (!SelectElements.Contains(p.Id))
-                            {
-                                SelectElements?.Add(p.Id);
-                            }
-                        });
-                    else elements?.ForEach(p => {
-                        if (SelectElements.Contains(p.Id))
-                            SelectElements?.Remove(p.Id);
+                    QuickSelectData elemData = data.Type == EnumType.Parameter ? data.Parent : data.Parent?.Parent;
+                    List<Element> elements = ((IGrouping<string?, Element>)elemData?.Current).ToList();
+                    elements?.ForEach(elem => {
+                        if (SelectElements.Contains(elem.Id))
+                            SelectElements?.Remove(elem.Id);
                     });
-                }
-                else if (data.Type == EnumType.Parameter)
-                {
-                    List<Element> elements = (data.Parent.Current) as List<Element>;
-                    elements?.ForEach(p => {
-                        if (SelectElements.Contains(p.Id))
-                            SelectElements?.Remove(p.Id);
-                    });
-                    SetCheckForChildren(data);
-                    SetCheckForParent(data);
 
-                    if (data.IsChecked == true)
-                    {
-                        elements?.ForEach(p => {
-                            if (!SelectElements.Contains(p.Id))
-                            {
-                                SelectElements?.Add(p.Id);
-                            }
-                        });
-                        return;
-                    }
-                    foreach (QuickSelectData item in data.Parent.Children)
-                    {
-                        if (item.Name == data.Name) continue;
-                        if (item.IsChecked == false) continue;
-                        else
-                        {
-                            elements?.ForEach(p => {
-                                if (!SelectElements.Contains(p.Id))
-                                {
-                                    SelectElements?.Add(p.Id);
-                                }
-                            });
-                        }
-                    }
-                    return;
-                }
-                else if (data.Type == EnumType.Value)
-                {
-                    List<Element> elements = (data.Parent?.Parent?.Current) as List<Element>;
-                    elements?.ForEach(p => {
-                        if (SelectElements.Contains(p.Id))
-                            SelectElements?.Remove(p.Id);
-                    });
-                    SetCheckForChildren(data);
-                    SetCheckForParent(data);
-
-                    foreach (QuickSelectData d in data.Parent.Parent.Children)
+                    foreach (QuickSelectData d in elemData.Children.OrderByDescending(x => x.IsChecked))
                     {
                         if (d.IsChecked == false) continue;
                         if (d.IsChecked == true)
                         {
-                            foreach (var item in (d.Parent.Current) as List<Element>)
+                            elements?.ForEach(elem => {
+                                if (elem.GetParameters(d.Name)?.Count > 0 && !SelectElements.Contains(elem.Id))
+                                {
+                                    SelectElements?.Add(elem.Id);
+                                }
+                            });
+                            if (SelectElements?.Count == elements?.Count)
                             {
-                                if (!SelectElements.Contains(item.Id))
-                                    SelectElements.Add(item.Id);
+                                break;
                             }
-                            return;
+                            continue;
                         }
 
-                        foreach (QuickSelectData item in d.Children)
+                        foreach (QuickSelectData item in d.Children.OrderByDescending(x => x.IsChecked))
                         {
                             if (item.IsChecked != true)
                             {
@@ -311,7 +271,7 @@ namespace QuickSelect.ViewModel
                                     {
                                         value = para.AsValueString();
                                     }
-                                    if (string.IsNullOrEmpty(value))
+                                    if (string.IsNullOrWhiteSpace(value))
                                     {
                                         value = "<null>";
                                     }
@@ -323,11 +283,13 @@ namespace QuickSelect.ViewModel
                                 }
                             });
                         }
+
+                        if (SelectElements?.Count == elements?.Count)
+                        {
+                            break;
+                        }
                     }
-                    return;
                 }
-                SetCheckForChildren(data);
-                SetCheckForParent(data);
             }
             catch (Exception)
             {
@@ -377,7 +339,7 @@ namespace QuickSelect.ViewModel
         }
 
         [RelayCommand]
-        private void Searching()
+        public void Searching()
         {
             SelectElements.Clear();
             Items.Clear();
@@ -433,8 +395,6 @@ namespace QuickSelect.ViewModel
         {
             try
             {
-                if (CheckSubString(keyword, ele.Name))
-                    return true;
                 if (CheckSubString(keyword, ele.Category.Name))
                     return true;
 
@@ -455,9 +415,9 @@ namespace QuickSelect.ViewModel
                         value = para.AsValueString();
                     }
 
-                    if (string.IsNullOrEmpty(value))
+                    if (string.IsNullOrWhiteSpace(value))
                     {
-                        continue;
+                        value = "<null>";
                     }
 
                     if (CheckSubString(keyword, value))

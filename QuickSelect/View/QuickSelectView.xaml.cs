@@ -61,5 +61,13 @@ namespace QuickSelect.View
         {
             AppCommand.IsShow = false;
         }
+
+        private void txbSearch_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter && DataContext is QuickSelectViewModel viewModel)
+            {
+                viewModel.Searching();
+            }
+        }
     }
 }

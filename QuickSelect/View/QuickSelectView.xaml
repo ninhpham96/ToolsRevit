@@ -52,7 +52,7 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <TextBox Text="{Binding Search}" Name="txbSearch">
+            <TextBox Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" Name="txbSearch" KeyDown="txbSearch_KeyDown">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="TextChanged">
                         <i:InvokeCommandAction Command="{Binding TextChangedCommand}"
@@ -81,6 +81,7 @@
                 <TreeView.ItemContainerStyle>
                     <Style TargetType="{x:Type TreeViewItem}">
                         <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                        <Setter Property="Focusable" Value="false" />
                     </Style>
                 </TreeView.ItemContainerStyle>
                 <TreeView.ItemTemplate>
@@ -96,7 +97,7 @@
             </TreeView>
         </GroupBox>
         <WrapPanel Grid.Row="3" VerticalAlignment="Center" HorizontalAlignment="Right">
-            <Button Command="{Binding ClickOkCommand}" Content="ハイライト" />
+            <Button Command="{Binding ClickOkCommand}" Content="ハイライト" IsDefault="True" />
             <Button Command="{Binding ClickZoomInCommand}" Content="表示" />
             <Button Content="キャンセル" IsCancel="True" Click="Button_Click" />
         </WrapPanel>
